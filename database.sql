@@ -94,3 +94,87 @@ alter table cars enable row level security;
 
 create extension if not exists pg_cron;
 create extension if not exists pg_net;
+
+-- Booking requests from the Telegram bot. Staff approval creates a wash_order.
+create table if not exists booking_requests (
+ id uuid primary key default gen_random_uuid(),
+ customer_id uuid not null references customers(id),
+ car_id uuid references cars(id) on delete set null,
+ plate text not null,
+ vehicle text not null default '',
+ service text not null default 'Комплексная мойка',
+ wash_site text not null default 'akku' check(wash_site in ('akku','premium')),
+ requested_for timestamptz not null,
+ proposed_for timestamptz,
+ state text not null default 'pending' check(state in ('pending','alternative','accepted','rejected')),
+ rejection_reason text,
+ wash_order_id uuid references wash_orders(id) on delete set null,
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now()
+);
+create table if not exists telegram_booking_sessions (
+ chat_id text primary key,
+ customer_id uuid not null references customers(id) on delete cascade,
+ car_id uuid references cars(id) on delete set null,
+ plate text not null default '',
+ vehicle text not null default '',
+ wash_site text not null default 'akku' check(wash_site in ('akku','premium')),
+ step text not null default 'car',
+ created_at timestamptz not null default now(),
+ updated_at timestamptz not null default now()
+);
+alter table wash_orders add column if not exists box text not null default '';
+alter table wash_orders add column if not exists washer_name text not null default '';
+alter table wash_orders add column if not exists arrived_at timestamptz;
+alter table wash_orders add column if not exists wash_started_at timestamptz;
+alter table wash_orders add column if not exists washed_at timestamptz;
+alter table wash_orders add column if not exists issued_at timestamptz;
+update wash_orders set arrived_at=created_at where arrived_at is null and status<>'booked';
+update wash_orders set issued_at=updated_at where issued_at is null and status='closed';
+create index if not exists booking_requests_state_idx on booking_requests(state,created_at desc);
+create index if not exists booking_requests_requested_for_idx on booking_requests(requested_for);
+alter table booking_requests enable row level security;
+alter table telegram_booking_sessions enable row level security;
+
+
+-- Booking metadata and service bay tracking.
+alter table wash_orders add column if not exists booking_source text not null default 'walk_in';
+alter table wash_orders add column if not exists box text not null default '';
+alter table wash_orders add column if not exists washer_name text not null default '';
+alter table wash_orders add column if not exists arrived_at timestamptz;
+alter table wash_orders add column if not exists wash_started_at timestamptz;
+alter table wash_orders add column if not exists washed_at timestamptz;
+alter table wash_orders add column if not exists issued_at timestamptz;
+update wash_orders set arrived_at=created_at where arrived_at is null and status <> 'booked';
+update wash_orders set issued_at=updated_at where issued_at is null and status='closed';
+
+alter table telegram_booking_sessions add column if not exists requested_date date;
+
+-- Staff requests to permanently remove completed archive orders; admin review is required.
+create table if not exists archive_delete_requests (
+ id uuid primary key default gen_random_uuid(),
+ order_id uuid references wash_orders(id) on delete set null,
+ plate text not null,
+ reason text not null,
+ requested_by text not null default 'staff',
+ status text not null default 'pending' check(status in ('pending','approved','rejected')),
+ created_at timestamptz not null default now(),
+ reviewed_at timestamptz,
+ reviewed_by text
+);
+create index if not exists archive_delete_requests_pending_idx on archive_delete_requests(status,created_at desc);
+alter table archive_delete_requests enable row level security;
+
+alter table wash_orders add column if not exists stage_history jsonb not null default '[]'::jsonb;
+
+alter table wash_orders add column if not exists drying_started_at timestamptz;
+
+-- Seed a readable timeline for historical orders on first migration.
+update wash_orders o set stage_history=coalesce((select jsonb_agg(jsonb_build_object('status',e.status,'at',e.event_at) order by e.event_at) from (
+ select 'booked'::text as status,scheduled_for as event_at where o.scheduled_for is not null
+ union all select 'arrived',arrived_at where o.arrived_at is not null
+ union all select 'washing',wash_started_at where o.wash_started_at is not null
+ union all select 'drying',drying_started_at where o.drying_started_at is not null
+ union all select 'ready',washed_at where o.washed_at is not null
+ union all select 'closed',issued_at where o.issued_at is not null
+) e),'[]'::jsonb) where stage_history='[]'::jsonb;
