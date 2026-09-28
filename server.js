@@ -147,17 +147,17 @@ async function handleBookingMessage(m,chatId){
  if(session.step==='date'){
   if(text==='Ближайшая запись'){
    const now=Date.now(),today=new Intl.DateTimeFormat('en-CA',{timeZone:SHOP_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()),[yy,mm,dd]=today.split('-'),base=Date.UTC(Number(yy),Number(mm)-1,Number(dd));let found=null;
-   for(let day=0;day<7&&!found;day++){const date=new Date(base+day*86400000).toISOString().slice(0,10);for(let hour=8;hour<=23;hour++){const candidate=new Date(date+'T'+String(hour).padStart(2,'0')+':00:00+05:00');if(candidate.getTime()<=now)continue;const iso=candidate.toISOString();const [{data:busy},{data:pending}]=await Promise.all([db.from('wash_orders').select('id').eq('wash_site',session.wash_site).eq('status','booked').eq('cancelled',false).eq('voided',false).eq('scheduled_for',iso).limit(1),db.from('booking_requests').select('id').eq('wash_site',session.wash_site).in('state',['pending','alternative']).eq('requested_for',iso).limit(1)]);if(!busy?.length&&!pending?.length){found=iso;break;}}}
+   for(let day=0;day<7&&!found;day++){const date=new Date(base+day*86400000).toISOString().slice(0,10);for(let slot=0;slot<32;slot++){const total=8*60+slot*30,hh=String(Math.floor(total/60)).padStart(2,'0'),mm=String(total%60).padStart(2,'0'),candidate=new Date(date+'T'+hh+':'+mm+':00+05:00');if(candidate.getTime()<=now)continue;const iso=candidate.toISOString();const [{data:busy},{data:pending}]=await Promise.all([db.from('wash_orders').select('id').eq('wash_site',session.wash_site).eq('status','booked').eq('cancelled',false).eq('voided',false).eq('scheduled_for',iso).limit(1),db.from('booking_requests').select('id').eq('wash_site',session.wash_site).in('state',['pending','alternative']).eq('requested_for',iso).limit(1)]);if(!busy?.length&&!pending?.length){found=iso;break;}}}
    if(!found){await reply('В ближайшие 7 дней свободных часов нет. Выберите дату вручную или попробуйте позже.');return true;}
    const {error}=await db.from('booking_requests').insert({customer_id:session.customer_id,car_id:session.car_id,plate:session.plate,vehicle:session.vehicle,service:'Комплексная мойка',wash_site:session.wash_site,requested_for:found,state:'pending'});if(error){await reply('Не удалось сохранить запрос. Попробуйте позднее.');return true;}
    await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);await reply('Запрос на ближайшее свободное время отправлен. Сотрудник подтвердит его здесь в Telegram.');if(process.env.STAFF_TELEGRAM_CHAT_ID)await telegram('sendMessage',{chat_id:process.env.STAFF_TELEGRAM_CHAT_ID,text:'Запрос на ближайшую запись: '+session.plate+' · '+new Date(found).toLocaleString('ru-RU')+'. CRM → Запись.'});return true;
   }  const match=text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(!match){await reply('Выберите дату одной из кнопок.');return true;}
   await db.from('telegram_booking_sessions').update({requested_date:match[3]+'-'+match[2]+'-'+match[1],step:'time',updated_at:new Date().toISOString()}).eq('chat_id',chatId);
-  const times=Array.from({length:16},(_,i)=>String(i+8).padStart(2,'0')+':00');
-  await reply('Выберите время начала (последнее начало — 23:00):',[...times.reduce((a,x,i)=>(i%4?a[a.length-1].push(x):a.push([x]),a),[]),['Отменить запись']]);return true;
+  const times=Array.from({length:32},(_,i)=>String(8+Math.floor(i/2)).padStart(2,'0')+':'+(i%2?'30':'00'));
+  await reply('Выберите время начала (последнее начало — 23:30):',[...times.reduce((a,x,i)=>(i%4?a[a.length-1].push(x):a.push([x]),a),[]),['Отменить запись']]);return true;
  }
  if(session.step==='time'){
-  if(!/^(0[8-9]|1\d|2[0-3]):00$/.test(text)){await reply('Выберите час кнопкой. Доступно с 08:00 до 23:00.');return true;}
+  if(!/^(0[8-9]|1\d|2[0-3]):(00|30)$/.test(text)){await reply('Выберите время кнопкой. Доступно с 08:00 до 23:30, шаг 30 минут.');return true;}
   const requestedFor=new Date(session.requested_date+'T'+text+':00+05:00').toISOString();
   const {data:busy}=await db.from('wash_orders').select('id').eq('wash_site',session.wash_site).eq('status','booked').eq('cancelled',false).eq('voided',false).eq('scheduled_for',requestedFor).limit(1);
   if(busy?.length){await reply('Это время уже занято. Начните запись ещё раз и выберите другое время.');await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);return true;}
