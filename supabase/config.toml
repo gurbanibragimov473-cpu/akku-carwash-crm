@@ -1,0 +1,2 @@
+[functions.remind-bookings]
+verify_jwt = false
