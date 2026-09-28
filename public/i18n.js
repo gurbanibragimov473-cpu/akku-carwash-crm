@@ -75,6 +75,8 @@ const translations = {
   "Неверный пароль.":"Incorrect password.","Не удалось загрузить данные.":"Could not load data.",
   "Бронирование отклонено.":"Booking declined.","Запись принята.":"Booking received.",
   "Данные клиента":"Customer details","Подключить Telegram":"Connect Telegram",
+  "Записи Telegram":"Telegram Bookings","Попробовать демо":"Try demo","ДЕМО-РЕЖИМ · Только тестовые данные. Изменения временные и останутся только в этом браузере.":"DEMO MODE · Sample data only. Changes are temporary and stay in this browser.","Демо-режим запущен. Используются только тестовые данные.":"Demo mode started. Sample data only.",
+  "До окончания мойки ":"Wash ends in ","Мойка завершена · можно нажать «На сушку»":"Wash complete · select “Start drying”","Мойка начинается автоматически":"Washing starts automatically",
 };
 const attrTranslations = {
   "Пароль сотрудника или главного администратора":"Staff or administrator password",
@@ -160,5 +162,7 @@ function mountLanguageControls() {
 document.addEventListener("DOMContentLoaded", () => {
   mountLanguageControls();
   translatePage();
-  new MutationObserver(() => { mountLanguageControls(); translatePage(); }).observe(document.body, {childList:true,subtree:true,characterData:true});
+  // Re-translate newly rendered app views. Do not observe characterData:
+  // translatePage updates text nodes and would otherwise trigger itself forever.
+  new MutationObserver(() => { mountLanguageControls(); translatePage(); }).observe(document.body, {childList:true,subtree:true});
 });
