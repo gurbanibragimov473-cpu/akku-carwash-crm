@@ -14,7 +14,7 @@ app.use(express.static(path.join(__dirname,'public')));
 const db=process.env.SUPABASE_URL&&process.env.SUPABASE_SERVICE_ROLE_KEY?createClient(process.env.SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY):null;
 const guard=(req,res,next)=>db?next():res.status(503).json({error:'Добавьте переменные Supabase на сервере.'});
 const admin=(req,res,next)=>req.staffRole==='admin'?next():res.status(403).json({error:'Это действие доступно только главному администратору.'});
-const stages={booked:'Автомобиль записан',arrived:'Автомобиль заехал',washing:'Идёт мойка',drying:'Сушка',ready:'Автомобиль готов',closed:'Автомобиль выдан'};
+const stages={booked:'Записан',arrived:'Заехал',washing:'Мойка автомобиля',drying:'Сушка',ready:'Автомобиль готов',parked:'На парковке',closed:'Отправлен в архив'};
 const SHOP_TZ='Asia/Qyzylorda';
 function normalizePhone(v=''){let d=String(v).replace(/\D/g,'');if(d.length===11&&d[0]==='8')d='7'+d.slice(1);if(d.length===10)d='7'+d;return d;}
 app.get('/api/session',(req,res)=>{const s=sessionOf(req);res.json({configured:Boolean(process.env.STAFF_PASSWORD),adminConfigured:Boolean(process.env.ADMIN_PASSWORD),authenticated:Boolean(s&&s.expires>Date.now()),role:s?.role||null});});
@@ -72,12 +72,14 @@ app.patch('/api/orders/:id',guard,async(req,res)=>{
 async function telegram(method,payload){if(!process.env.TELEGRAM_BOT_TOKEN)return null;try{const r=await fetch('https://api.telegram.org/bot'+process.env.TELEGRAM_BOT_TOKEN+'/'+method,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}),j=await r.json().catch(()=>({}));if(!r.ok||!j.ok){console.error('Telegram API error:',j.description||r.statusText);return null;}return j.result;}catch(e){console.error('Telegram request failed:',e.message);return null;}}
 async function replaceStatusMessage(order,text){if(!order?.customers?.telegram_chat_id)return;const chatId=order.customers.telegram_chat_id,sent=await telegram('sendMessage',{chat_id:chatId,text});if(!sent?.message_id)return;if(order.telegram_message_id){const deleted=await telegram('deleteMessage',{chat_id:chatId,message_id:order.telegram_message_id});if(!deleted){const edited=await telegram('editMessageText',{chat_id:chatId,message_id:order.telegram_message_id,text});if(edited){await telegram('deleteMessage',{chat_id:chatId,message_id:sent.message_id});return;}}}await db.from('wash_orders').update({telegram_message_id:sent.message_id}).eq('id',order.id);}
 app.patch('/api/orders/:id/status',guard,async(req,res)=>{
- const {status}=req.body||{};if(!Object.hasOwn(stages,status)||['closed','booked'].includes(status))return res.status(400).json({error:'Недопустимый этап.'});
- const {data:current,error:ce}=await db.from('wash_orders').select('stage_history').eq('id',req.params.id).single();if(ce)return res.status(404).json({error:'Заказ не найден.'});
- const stamp=new Date().toISOString(),patch={status,updated_at:stamp,stage_history:[...(current.stage_history||[]),{status,at:stamp}].slice(-100)};if(status==='arrived')patch.arrived_at=stamp;if(status==='washing')patch.wash_started_at=stamp;if(status==='drying')patch.drying_started_at=stamp;if(status==='ready')patch.washed_at=stamp;
+ const {status}=req.body||{};if(!Object.hasOwn(stages,status)||status==='closed'||status==='booked')return res.status(400).json({error:'Недопустимый этап.'});
+ const {data:current,error:ce}=await db.from('wash_orders').select('status,arrived_at,wash_started_at,drying_started_at,stage_history').eq('id',req.params.id).single();if(ce)return res.status(404).json({error:'Заказ не найден.'});
+ const allowed={booked:'arrived',arrived:'washing',washing:'drying',drying:'ready',ready:'parked'};if(allowed[current.status]!==status)return res.status(409).json({error:'Сначала завершите предыдущий этап.'});
+ const now=Date.now(),start=current.status==='arrived'?current.arrived_at:current.status==='washing'?current.wash_started_at:current.status==='drying'?current.drying_started_at:null,waitMs=current.status==='arrived'?5*60*1000:current.status==='washing'?30*60*1000:0;
+ if(start&&now-new Date(start).getTime()<waitMs){const seconds=Math.ceil((waitMs-(now-new Date(start).getTime()))/1000);return res.status(409).json({error:'Этап ещё выполняется. Осталось '+Math.floor(seconds/60)+' мин '+String(seconds%60).padStart(2,'0')+' сек.'});}
+ const stamp=new Date().toISOString(),patch={status,updated_at:stamp,stage_history:[...(current.stage_history||[]),{status,at:stamp}].slice(-100)};if(status==='arrived')patch.arrived_at=stamp;if(status==='washing')patch.wash_started_at=stamp;if(status==='drying')patch.drying_started_at=stamp;if(status==='ready')patch.washed_at=stamp;if(status==='parked')patch.parked_at=stamp;
  const {data,error}=await db.from('wash_orders').update(patch).eq('id',req.params.id).eq('cancelled',false).select('*, customers(name,phone,telegram_chat_id)').single();if(error)return res.status(500).json({error:error.message});await replaceStatusMessage(data,'🚘 '+data.plate+' — '+stages[status]+'.');res.json(data);
-});
-app.post('/api/orders/:id/close',guard,async(req,res)=>{const {data:current,error:ce}=await db.from('wash_orders').select('stage_history').eq('id',req.params.id).single();if(ce)return res.status(404).json({error:'Заказ не найден.'});const stamp=new Date().toISOString(),{data,error}=await db.from('wash_orders').update({status:'closed',issued_at:stamp,updated_at:stamp,stage_history:[...(current.stage_history||[]),{status:'closed',at:stamp}].slice(-100)}).eq('id',req.params.id).select('*, customers(name,phone,telegram_chat_id)').single();if(error)return res.status(500).json({error:error.message});await replaceStatusMessage(data,'✅ '+data.plate+' — автомобиль выдан. Спасибо, что выбрали АККУ!');res.json(data);});
+});app.post('/api/orders/:id/close',guard,async(req,res)=>{const {data:current,error:ce}=await db.from('wash_orders').select('status,stage_history').eq('id',req.params.id).single();if(ce)return res.status(404).json({error:'Заказ не найден.'});if(!['parked','ready'].includes(current.status))return res.status(409).json({error:'Сначала переведите автомобиль на парковку.'});const stamp=new Date().toISOString(),{data,error}=await db.from('wash_orders').update({status:'closed',issued_at:stamp,updated_at:stamp,stage_history:[...(current.stage_history||[]),{status:'closed',at:stamp}].slice(-100)}).eq('id',req.params.id).select('*, customers(name,phone,telegram_chat_id)').single();if(error)return res.status(500).json({error:error.message});await replaceStatusMessage(data,'✅ '+data.plate+' — автомобиль отправлен в архив. Спасибо, что выбрали АККУ!');res.json(data);});
 app.post('/api/orders/:id/cancel',guard,async(req,res)=>{const reason=String(req.body?.reason||'').trim();if(reason.length<3)return res.status(400).json({error:'Укажите причину отмены.'});const {data,error}=await db.from('wash_orders').update({cancelled:true,cancellation_reason:reason,cancelled_at:new Date().toISOString(),cancelled_by:req.staffRole,updated_at:new Date().toISOString()}).eq('id',req.params.id).eq('cancelled',false).select('*, customers(name,phone,telegram_chat_id)').single();if(error)return res.status(400).json({error:error.message});await replaceStatusMessage(data,'⚠️ '+data.plate+' — заказ отменён. Причина: '+reason);res.json(data);});
 app.post('/api/orders/:id/restore',guard,async(req,res)=>{const {data,error}=await db.from('wash_orders').update({status:'arrived',voided:false,updated_at:new Date().toISOString()}).eq('id',req.params.id).eq('cancelled',false).select('*, customers(name,phone,telegram_chat_id)').single();if(error)return res.status(400).json({error:error.message});await replaceStatusMessage(data,'🚗 '+data.plate+' — автомобиль заехал.');res.json(data);});
 app.delete('/api/orders/:id',guard,async(req,res)=>{const {data,error}=await db.from('wash_orders').update({voided:true,updated_at:new Date().toISOString()}).eq('id',req.params.id).eq('cancelled',false).select('*, customers(name,phone,telegram_chat_id)').single();if(error)return res.status(400).json({error:error.message});res.json(data);});
@@ -92,11 +94,10 @@ async function acceptBookingRequest(requestId,scheduledFor){
  return o;
 }
 app.get('/api/staff/bookings',guard,async(req,res)=>{
- const [{data:orders,error:oe},{data:requests,error:re}]=await Promise.all([db.from('wash_orders').select('*, customers(name,phone), cars(id)').eq('status','booked').eq('cancelled',false).eq('voided',false).order('scheduled_for'),db.from('booking_requests').select('*, customers(name,phone)').in('state',['pending','alternative']).order('requested_for')]);
- if(oe||re)return res.status(500).json({error:(oe||re).message});
- res.json([...(orders||[]),...(requests||[]).map(r=>({...r,booking_request:true,booking_source:'telegram',status:'booked',scheduled_for:r.proposed_for||r.requested_for}))]);
-});
-app.post('/api/staff/bookings/:id/decision',guard,async(req,res)=>{
+ const [{data:orders,error:oe},{data:cancelledOrders,error:coe},{data:requests,error:re},{data:cancelledRequests,error:cre}]=await Promise.all([db.from('wash_orders').select('*, customers(name,phone), cars(id)').eq('status','booked').eq('cancelled',false).eq('voided',false).order('scheduled_for'),db.from('wash_orders').select('*, customers(name,phone), cars(id)').eq('status','booked').eq('cancelled',true).eq('booking_source','telegram').order('scheduled_for'),db.from('booking_requests').select('*, customers(name,phone)').in('state',['pending','alternative']).order('requested_for'),db.from('booking_requests').select('*, customers(name,phone)').eq('state','rejected').eq('rejection_reason','Отменено клиентом через Telegram').order('requested_for')]);
+ if(oe||coe||re||cre)return res.status(500).json({error:(oe||coe||re||cre).message});
+ res.json([...(orders||[]),...(cancelledOrders||[]),...(requests||[]).map(r=>({...r,booking_request:true,booking_source:'telegram',status:'booked',scheduled_for:r.proposed_for||r.requested_for})),...(cancelledRequests||[]).map(r=>({...r,booking_request:true,booking_cancelled:true,cancelled:true,cancellation_reason:r.rejection_reason,booking_source:'telegram',status:'booked',scheduled_for:r.proposed_for||r.requested_for}))]);
+});app.post('/api/staff/bookings/:id/decision',guard,async(req,res)=>{
  const {decision,proposed_for}=req.body||{};const {data:r,error:re}=await db.from('booking_requests').select('*, customers(name,phone,telegram_chat_id)').eq('id',req.params.id).single();if(re||!r)return res.status(404).json({error:'Заявка не найдена.'});
  if(decision==='accept'){try{return res.json(await acceptBookingRequest(r.id));}catch(e){return res.status(409).json({error:e.message});}}
  if(decision==='reject'){await db.from('booking_requests').update({state:'rejected',updated_at:new Date().toISOString()}).eq('id',r.id);if(r.customers?.telegram_chat_id)await telegram('sendMessage',{chat_id:r.customers.telegram_chat_id,text:'К сожалению, сотрудник не смог подтвердить выбранное время для '+r.plate+'. Попробуйте выбрать другое время через кнопку «Записаться на мойку».',reply_markup:{keyboard:[[{text:'Записаться на мойку'}]],resize_keyboard:true}});return res.json({ok:true});}
@@ -104,16 +105,22 @@ app.post('/api/staff/bookings/:id/decision',guard,async(req,res)=>{
  res.status(400).json({error:'Выберите действие.'});
 });
 app.post('/api/announcements',guard,async(req,res)=>{const text=String(req.body?.text||'').trim();if(text.length<3||text.length>1000)return res.status(400).json({error:'Напишите сообщение от 3 до 1000 символов.'});const {data:customers,error}=await db.from('customers').select('telegram_chat_id').eq('announcements_opt_in',true).not('telegram_chat_id','is',null);if(error)return res.status(500).json({error:error.message});let sent=0;for(const c of customers||[]){if(await telegram('sendMessage',{chat_id:c.telegram_chat_id,text:text}))sent++;await new Promise(r=>setTimeout(r,40));}res.json({sent,total:customers?.length||0});});
-async function handleBookingMessage(m,chatId){
+function telegramBookingDateRows(){const out=[];for(let i=0;i<7;i++){const d=new Date(Date.now()+i*86400000),parts=new Intl.DateTimeFormat('en-CA',{timeZone:SHOP_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d),[y,mo,day]=parts.split('-');out.push(day+'.'+mo+'.'+y);}return [...out.reduce((a,x,i)=>(i%2?a[a.length-1].push(x):a.push([x]),a),[]),['Ближайшая запись'],['Отменить запись']];}
+async function telegramBookingCancelRows(customerId){const [{data:requests},{data:bookings}]=await Promise.all([db.from('booking_requests').select('id,plate,requested_for,proposed_for').eq('customer_id',customerId).in('state',['pending','alternative']).order('requested_for'),db.from('wash_orders').select('id,plate,scheduled_for').eq('customer_id',customerId).eq('status','booked').eq('cancelled',false).eq('voided',false).gte('scheduled_for',new Date().toISOString()).order('scheduled_for')]);const label=(plate,when)=>'Отменить запись · '+plate+' · '+new Intl.DateTimeFormat('ru-RU',{timeZone:SHOP_TZ,day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(when));return [...(requests||[]).map(r=>({id:r.id,plate:r.plate,when:r.proposed_for||r.requested_for,kind:'cancelreq'})),...(bookings||[]).map(o=>({id:o.id,plate:o.plate,when:o.scheduled_for,kind:'cancelord'}))].map(r=>({...r,label:label(r.plate,r.when)}));}async function handleBookingMessage(m,chatId){
  const text=String(m.text||'').trim();
  const reply=(message,keyboard)=>telegram('sendMessage',{chat_id:chatId,text:message,reply_markup:keyboard?{keyboard,resize_keyboard:true}:undefined});
  if(text==='Записаться на мойку'||/^\/book(@\w+)?$/.test(text)){
   const {data:c}=await db.from('customers').select('id').eq('telegram_chat_id',chatId).maybeSingle();
   if(!c){await reply('Сначала привяжите Telegram номером телефона из карточки клиента.',[[{text:'Поделиться номером телефона',request_contact:true}]]);return true;}
   await db.from('telegram_booking_sessions').upsert({chat_id:chatId,customer_id:c.id,plate:'',vehicle:'',step:'plate',requested_date:null,updated_at:new Date().toISOString()});
-  await reply('Запись на мойку. Напишите госномер автомобиля.');return true;
+  await reply('Запись на мойку. Напишите госномер автомобиля.',[['Назад'],['Отменить запись']]);return true;
  }
  const {data:customer}=await db.from('customers').select('id').eq('telegram_chat_id',chatId).maybeSingle();
+ if(customer&&text.startsWith('Отменить запись · ')){
+  const rows=await telegramBookingCancelRows(customer.id),row=rows.find(x=>x.label===text);if(!row){await reply('Запись уже отменена или не найдена. Нажмите «Отменить запись», чтобы обновить список.');return true;}
+  if(row.kind==='cancelreq'){await db.from('booking_requests').update({state:'rejected',rejection_reason:'Отменено клиентом через Telegram',updated_at:new Date().toISOString()}).eq('id',row.id).eq('customer_id',customer.id);await reply('Запрос на '+row.plate+' отменён. Отмена отражена в разделе «Запись».');return true;}
+  const {data:o}=await db.from('wash_orders').update({cancelled:true,cancellation_reason:'Клиент отменил запись через Telegram',cancelled_by:'customer_telegram',cancelled_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',row.id).eq('customer_id',customer.id).eq('status','booked').eq('cancelled',false).select('*, customers(name,phone,telegram_chat_id)').maybeSingle();if(o){await replaceStatusMessage(o,'⚠️ '+o.plate+' — клиент отменил запись через Telegram.');await reply('Запись на '+o.plate+' отменена. Отмена отражена в разделе «Запись».');}else await reply('Запись уже отменена или не найдена.');return true;
+ }
  if(customer&&text==='Подтвердить предложенное время'){
   const {data:r}=await db.from('booking_requests').select('id,proposed_for').eq('customer_id',customer.id).eq('state','alternative').order('updated_at',{ascending:false}).limit(1).maybeSingle();
   if(r){try{await acceptBookingRequest(r.id,r.proposed_for);await reply('Спасибо! Запись подтверждена.');}catch(e){await reply('Это время уже занято. Нажмите «Записаться на мойку», чтобы выбрать другое.');}}
@@ -121,28 +128,33 @@ async function handleBookingMessage(m,chatId){
  }
  if(customer&&text==='Выбрать другое время'){await db.from('booking_requests').update({state:'rejected',updated_at:new Date().toISOString()}).eq('customer_id',customer.id).eq('state','alternative');await reply('Нажмите «Записаться на мойку», чтобы выбрать другое время.',[['Записаться на мойку']]);return true;}
  const {data:session}=await db.from('telegram_booking_sessions').select('*').eq('chat_id',chatId).maybeSingle();
- if(!session)return false;
- if(text==='Отменить запись'){await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);await reply('Создание записи отменено.');return true;}
- if(session.step==='plate'){
+ if(text==='Отменить запись'||/^\/cancel(@\w+)?$/i.test(text)){
+  if(session){await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);await reply('Черновик записи отменён.');}
+  if(!customer){await reply('Сначала привяжите Telegram к номеру телефона из заказа.');return true;}
+  const rows=await telegramBookingCancelRows(customer.id);
+  if(!rows.length){await reply('У вас нет активных записей, которые можно отменить.');return true;}
+  await reply('Выберите запись, которую нужно отменить:',rows.slice(0,10).map(r=>[r.label]));return true;
+ }
+ if(!session)return false; if(text==='Назад'){if(session.step==='plate'){await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);await reply('Вы вернулись в меню записи.',[['Записаться на мойку','Отменить запись']]);return true;}if(session.step==='vehicle'){await db.from('telegram_booking_sessions').update({step:'plate',vehicle:'',car_id:null,updated_at:new Date().toISOString()}).eq('chat_id',chatId);await reply('Введите госномер автомобиля.',[['Назад'],['Отменить запись']]);return true;}if(session.step==='site'){await db.from('telegram_booking_sessions').update({step:'vehicle',updated_at:new Date().toISOString()}).eq('chat_id',chatId);await reply('Напишите марку и модель автомобиля.',[['Назад'],['Отменить запись']]);return true;}if(session.step==='time'){await db.from('telegram_booking_sessions').update({step:'date',updated_at:new Date().toISOString()}).eq('chat_id',chatId);await reply('Выберите дату:',telegramBookingDateRows());return true;}if(session.step==='date'){await db.from('telegram_booking_sessions').update({step:'site',updated_at:new Date().toISOString()}).eq('chat_id',chatId);await reply('Выберите автомоечный комплекс:',[['АККУ ОСНОВНОЙ','АККУ PREMIUM'],['Отменить запись']]);return true;}} if(session.step==='plate'){
   const plate=text.toUpperCase().replace(/\s+/g,' ');
   const {data:car}=await db.from('cars').select('id,plate,vehicle').eq('customer_id',session.customer_id).ilike('plate',plate).maybeSingle();
   const patch=car?{car_id:car.id,plate:car.plate,vehicle:car.vehicle,step:'site'}:{plate,step:'vehicle'};
   await db.from('telegram_booking_sessions').update({...patch,updated_at:new Date().toISOString()}).eq('chat_id',chatId);
-  if(car){await reply('Машина найдена: '+car.plate+' · '+(car.vehicle||'автомобиль')+'. Выберите мойку:',[['АККУ ОСНОВНОЙ','АККУ PREMIUM'],['Отменить запись']]);}
-  else await reply('Напишите марку и модель автомобиля.');
+  if(car){await reply('Машина найдена: '+car.plate+' · '+(car.vehicle||'автомобиль')+'. Выберите мойку:',[['АККУ ОСНОВНОЙ','АККУ PREMIUM'],['Назад'],['Отменить запись']]);}
+  else await reply('Напишите марку и модель автомобиля.',[['Назад'],['Отменить запись']]);
   return true;
  }
  if(session.step==='vehicle'){
   await db.from('telegram_booking_sessions').update({vehicle:text,step:'site',updated_at:new Date().toISOString()}).eq('chat_id',chatId);
-  await reply('Выберите мойку:',[['АККУ ОСНОВНОЙ','АККУ PREMIUM'],['Отменить запись']]);return true;
+  await reply('Выберите мойку:',[['АККУ ОСНОВНОЙ','АККУ PREMIUM'],['Назад'],['Отменить запись']]);return true;
  }
  if(session.step==='site'){
-  if(!['АККУ ОСНОВНОЙ','АККУ PREMIUM'].includes(text)){await reply('Выберите мойку кнопкой ниже:',[['АККУ ОСНОВНОЙ','АККУ PREMIUM'],['Отменить запись']]);return true;}
+  if(!['АККУ ОСНОВНОЙ','АККУ PREMIUM'].includes(text)){await reply('Выберите мойку кнопкой ниже:',[['АККУ ОСНОВНОЙ','АККУ PREMIUM'],['Назад'],['Отменить запись']]);return true;}
   const site=text==='АККУ PREMIUM'?'premium':'akku';
   await db.from('telegram_booking_sessions').update({wash_site:site,step:'date',updated_at:new Date().toISOString()}).eq('chat_id',chatId);
   const dates=[];
   for(let i=0;i<7;i++){const d=new Date(Date.now()+i*86400000),parts=new Intl.DateTimeFormat('en-CA',{timeZone:SHOP_TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(d),[y,mo,day]=parts.split('-');dates.push(day+'.'+mo+'.'+y);}
-  await reply('Выберите дату или попросите ближайшее свободное время. Работаем с 08:00 до 00:00:',[...dates.reduce((a,x,i)=>(i%2?a[a.length-1].push(x):a.push([x]),a),[]),['Ближайшая запись'],['Отменить запись']]);return true;
+  await reply('Выберите дату или попросите ближайшее свободное время. Работаем с 08:00 до 00:00:',[...dates.reduce((a,x,i)=>(i%2?a[a.length-1].push(x):a.push([x]),a),[]),['Ближайшая запись'],['Назад'],['Отменить запись']]);return true;
  }
  if(session.step==='date'){
   if(text==='Ближайшая запись'){
@@ -150,11 +162,11 @@ async function handleBookingMessage(m,chatId){
    for(let day=0;day<7&&!found;day++){const date=new Date(base+day*86400000).toISOString().slice(0,10);for(let slot=0;slot<32;slot++){const total=8*60+slot*30,hh=String(Math.floor(total/60)).padStart(2,'0'),mm=String(total%60).padStart(2,'0'),candidate=new Date(date+'T'+hh+':'+mm+':00+05:00');if(candidate.getTime()<=now)continue;const iso=candidate.toISOString();const [{data:busy},{data:pending}]=await Promise.all([db.from('wash_orders').select('id').eq('wash_site',session.wash_site).eq('status','booked').eq('cancelled',false).eq('voided',false).eq('scheduled_for',iso).limit(1),db.from('booking_requests').select('id').eq('wash_site',session.wash_site).in('state',['pending','alternative']).eq('requested_for',iso).limit(1)]);if(!busy?.length&&!pending?.length){found=iso;break;}}}
    if(!found){await reply('В ближайшие 7 дней свободных часов нет. Выберите дату вручную или попробуйте позже.');return true;}
    const {error}=await db.from('booking_requests').insert({customer_id:session.customer_id,car_id:session.car_id,plate:session.plate,vehicle:session.vehicle,service:'Комплексная мойка',wash_site:session.wash_site,requested_for:found,state:'pending'});if(error){await reply('Не удалось сохранить запрос. Попробуйте позднее.');return true;}
-   await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);await reply('Запрос на ближайшее свободное время отправлен. Сотрудник подтвердит его здесь в Telegram.');if(process.env.STAFF_TELEGRAM_CHAT_ID)await telegram('sendMessage',{chat_id:process.env.STAFF_TELEGRAM_CHAT_ID,text:'Запрос на ближайшую запись: '+session.plate+' · '+new Date(found).toLocaleString('ru-RU')+'. CRM → Запись.'});return true;
+   await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);await reply('Запрос на ближайшее свободное время отправлен. Сотрудник подтвердит его здесь в Telegram. Чтобы отменить запрос, нажмите «Отменить запись».',[['Записаться на мойку','Отменить запись']]);if(process.env.STAFF_TELEGRAM_CHAT_ID)await telegram('sendMessage',{chat_id:process.env.STAFF_TELEGRAM_CHAT_ID,text:'Запрос на ближайшую запись: '+session.plate+' · '+new Date(found).toLocaleString('ru-RU')+'. CRM → Запись.'});return true;
   }  const match=text.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);if(!match){await reply('Выберите дату одной из кнопок.');return true;}
   await db.from('telegram_booking_sessions').update({requested_date:match[3]+'-'+match[2]+'-'+match[1],step:'time',updated_at:new Date().toISOString()}).eq('chat_id',chatId);
   const times=Array.from({length:32},(_,i)=>String(8+Math.floor(i/2)).padStart(2,'0')+':'+(i%2?'30':'00'));
-  await reply('Выберите время начала (последнее начало — 23:30):',[...times.reduce((a,x,i)=>(i%4?a[a.length-1].push(x):a.push([x]),a),[]),['Отменить запись']]);return true;
+  await reply('Выберите время начала (последнее начало — 23:30):',[...times.reduce((a,x,i)=>(i%4?a[a.length-1].push(x):a.push([x]),a),[]),['Назад'],['Отменить запись']]);return true;
  }
  if(session.step==='time'){
   if(!/^(0[8-9]|1\d|2[0-3]):(00|30)$/.test(text)){await reply('Выберите время кнопкой. Доступно с 08:00 до 23:30, шаг 30 минут.');return true;}
@@ -164,7 +176,7 @@ async function handleBookingMessage(m,chatId){
   const {error}=await db.from('booking_requests').insert({customer_id:session.customer_id,car_id:session.car_id,plate:session.plate,vehicle:session.vehicle,service:'Комплексная мойка',wash_site:session.wash_site,requested_for:requestedFor,state:'pending'});
   if(error){console.error('Booking request error:',error.message);await reply('Не удалось сохранить запрос. Попробуйте позднее.');return true;}
   await db.from('telegram_booking_sessions').delete().eq('chat_id',chatId);
-  await reply('Запрос отправлен сотрудникам АККУ. Мы сообщим сюда, когда запись подтвердят или предложат другое время.');
+  await reply('Запрос отправлен сотрудникам АККУ. Мы сообщим сюда, когда запись подтвердят или предложат другое время. Чтобы отменить его, нажмите «Отменить запись».',[['Записаться на мойку','Отменить запись']]);
   if(process.env.STAFF_TELEGRAM_CHAT_ID)await telegram('sendMessage',{chat_id:process.env.STAFF_TELEGRAM_CHAT_ID,text:'Новая заявка на мойку: '+session.plate+' · '+new Date(requestedFor).toLocaleString('ru-RU')+' · '+(session.wash_site==='premium'?'АККУ PREMIUM':'АККУ ОСНОВНОЙ')+'. Откройте CRM → Бронирование.'});
   return true;
  }
@@ -172,6 +184,19 @@ async function handleBookingMessage(m,chatId){
 }
 app.post('/api/telegram/webhook',guard,async(req,res)=>{
  if(!process.env.WEBHOOK_SECRET||req.get('x-telegram-bot-api-secret-token')!==process.env.WEBHOOK_SECRET)return res.sendStatus(401);
+ const cb=req.body?.callback_query;
+ if(cb){
+  const chatId=String(cb.message?.chat?.id||''),parts=String(cb.data||'').split(':'),kind=parts[0],id=parts[1];let resultMessage='Запись не найдена или уже отменена.';
+  const {data:customer}=await db.from('customers').select('id').eq('telegram_chat_id',chatId).maybeSingle();
+  if(customer&&kind==='cancelreq'){
+   const {data:r}=await db.from('booking_requests').select('id,plate').eq('id',id).eq('customer_id',customer.id).in('state',['pending','alternative']).maybeSingle();
+   if(r){await db.from('booking_requests').update({state:'rejected',rejection_reason:'Отменено клиентом через Telegram',updated_at:new Date().toISOString()}).eq('id',r.id);resultMessage='Запрос записи на '+r.plate+' отменён. Отмена отображена в записи АККУ.';}
+  }else if(customer&&kind==='cancelord'){
+   const {data:o}=await db.from('wash_orders').update({cancelled:true,cancellation_reason:'Клиент отменил запись через Telegram',cancelled_by:'customer_telegram',cancelled_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',id).eq('customer_id',customer.id).eq('status','booked').eq('cancelled',false).select('*, customers(name,phone,telegram_chat_id)').maybeSingle();
+   if(o){await replaceStatusMessage(o,'⚠️ '+o.plate+' — клиент отменил запись через Telegram.');resultMessage='Запись на '+o.plate+' отменена. Отмена отображена в записи АККУ.';}
+  }
+  await telegram('answerCallbackQuery',{callback_query_id:cb.id,text:resultMessage});await telegram('sendMessage',{chat_id:chatId,text:resultMessage});return res.sendStatus(200);
+ }
  const m=req.body?.message,chatId=String(m?.chat?.id||'');if(!m)return res.sendStatus(200);
  const contactPrompt=async text=>telegram('sendMessage',{chat_id:chatId,text,reply_markup:{keyboard:[[{text:'Поделиться номером телефона',request_contact:true}]],resize_keyboard:true,one_time_keyboard:true}});
  const bookingHandled=await handleBookingMessage(m,chatId);if(bookingHandled)return res.sendStatus(200);
@@ -179,12 +204,12 @@ app.post('/api/telegram/webhook',guard,async(req,res)=>{
  if(start){
   if(start[1]){const {data:c}=await db.from('customers').select('id').eq('link_code',start[1]).maybeSingle();if(c)await db.from('customers').update({telegram_pending_chat_id:chatId}).eq('id',c.id);else{await contactPrompt('Ссылка устарела. Поделитесь номером телефона, который указали при оформлении.');return res.sendStatus(200);}}
   const {data:alreadyLinked}=await db.from('customers').select('id').eq('telegram_chat_id',chatId).maybeSingle();
-  if(alreadyLinked)await telegram('sendMessage',{chat_id:chatId,text:'Меню АККУ обновлено. Выберите действие:',reply_markup:{keyboard:[[{text:'Записаться на мойку'},{text:'Уведомлять об окошках'}],[{text:'Мои статусы'},{text:'Не сообщать об окошках'}]],resize_keyboard:true}});
+  if(alreadyLinked)await telegram('sendMessage',{chat_id:chatId,text:'Меню АККУ обновлено. Выберите действие:',reply_markup:{keyboard:[[{text:'Записаться на мойку'},{text:'Уведомлять об окошках'}],[{text:'Мои статусы'},{text:'Не сообщать об окошках'}],[{text:'Отменить запись'}]],resize_keyboard:true}});
   else await contactPrompt('Чтобы получать статусы мойки, подтвердите номер телефона. Для сообщений об акциях после привязки нажмите «Уведомлять об окошках».');
  }
  else if(m.contact&&m.contact.user_id===m.from?.id){let {data:c}=await db.from('customers').select('id,phone,telegram_chat_id').eq('telegram_pending_chat_id',chatId).maybeSingle();if(!c){const {data:linked}=await db.from('customers').select('id,phone,telegram_chat_id').eq('telegram_chat_id',chatId).maybeSingle();if(linked)c=linked;else{const {data:all}=await db.from('customers').select('id,phone,telegram_chat_id').is('telegram_chat_id',null);const matches=(all||[]).filter(x=>normalizePhone(x.phone)===normalizePhone(m.contact.phone_number));if(matches.length===1)c=matches[0];else if(matches.length>1){await contactPrompt('Найдено несколько карточек с этим номером. Попросите сотрудника помочь с привязкой.');return res.sendStatus(200);}}}
  if(!c||normalizePhone(c.phone)!==normalizePhone(m.contact.phone_number)){await telegram('sendMessage',{chat_id:chatId,text:'Не нашёл заказ с этим номером. Проверьте номер у сотрудника АККУ.'});}
- else{await db.from('customers').update({telegram_chat_id:chatId,telegram_pending_chat_id:null,link_code:null}).eq('id',c.id);await telegram('sendMessage',{chat_id:chatId,text:'✅ Номер подтверждён! Теперь сюда будут приходить сообщения об этапах мойки.',reply_markup:{keyboard:[[{text:'Записаться на мойку'},{text:'Уведомлять об окошках'}],[{text:'Мои статусы'},{text:'Не сообщать об окошках'}]],resize_keyboard:true}});const {data:active}=await db.from('wash_orders').select('*, customers(name,phone,telegram_chat_id)').eq('customer_id',c.id).eq('voided',false).eq('cancelled',false).neq('status','closed');for(const o of active||[])await replaceStatusMessage(o,'🚘 '+o.plate+' — '+(stages[o.status]||stages.arrived)+'.');}}
+ else{await db.from('customers').update({telegram_chat_id:chatId,telegram_pending_chat_id:null,link_code:null}).eq('id',c.id);await telegram('sendMessage',{chat_id:chatId,text:'✅ Номер подтверждён! Теперь сюда будут приходить сообщения об этапах мойки.',reply_markup:{keyboard:[[{text:'Записаться на мойку'},{text:'Уведомлять об окошках'}],[{text:'Мои статусы'},{text:'Не сообщать об окошках'}],[{text:'Отменить запись'}]],resize_keyboard:true}});const {data:active}=await db.from('wash_orders').select('*, customers(name,phone,telegram_chat_id)').eq('customer_id',c.id).eq('voided',false).eq('cancelled',false).neq('status','closed');for(const o of active||[])await replaceStatusMessage(o,'🚘 '+o.plate+' — '+(stages[o.status]||stages.arrived)+'.');}}
  else if((/^\/status(@\w+)?$/.test(m.text||'')||m.text==='Мои статусы')){const {data:c}=await db.from('customers').select('id').eq('telegram_chat_id',chatId).maybeSingle();if(!c)await contactPrompt('Сначала поделитесь номером телефона из заказа.');else{const {data:active}=await db.from('wash_orders').select('plate,status').eq('customer_id',c.id).eq('voided',false).eq('cancelled',false).neq('status','closed');await telegram('sendMessage',{chat_id:chatId,text:active?.length?active.map(o=>'🚘 '+o.plate+' — '+stages[o.status]).join('\n'):'Активных автомобилей сейчас нет.'});}}
  else if((/^\/offers(@\w+)?$/.test(m.text||'')||m.text==='Уведомлять об окошках'||m.text==='Сообщать об окошках')){const {data:customer}=await db.from('customers').select('id').eq('telegram_chat_id',chatId).maybeSingle();if(!customer)await contactPrompt('Сначала привяжите номер телефона из заказа, затем отправьте /offers.');else{const {error}=await db.from('customers').update({announcements_opt_in:true}).eq('id',customer.id);await telegram('sendMessage',{chat_id:chatId,text:error?'Не удалось включить рассылку.':'Вы подписались на сообщения АККУ о свободных окнах и предложениях. Для отказа отправьте /stop.'});}}
  else if((/^\/stop(@\w+)?$/.test(m.text||'')||m.text==='Не сообщать об окошках')){await db.from('customers').update({announcements_opt_in:false}).eq('telegram_chat_id',chatId);await telegram('sendMessage',{chat_id:chatId,text:'Сообщения о свободных окнах отключены. Статусы текущей мойки продолжат приходить.'});}

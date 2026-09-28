@@ -178,3 +178,9 @@ update wash_orders o set stage_history=coalesce((select jsonb_agg(jsonb_build_ob
  union all select 'ready',washed_at where o.washed_at is not null
  union all select 'closed',issued_at where o.issued_at is not null
 ) e),'[]'::jsonb) where stage_history='[]'::jsonb;
+
+
+-- Parking stage and timed wash progression.
+alter table wash_orders add column if not exists parked_at timestamptz;
+alter table wash_orders drop constraint if exists wash_orders_status_check;
+alter table wash_orders add constraint wash_orders_status_check check(status in ('booked','arrived','washing','drying','ready','parked','closed'));
