@@ -1,96 +1,61 @@
-# Автомоечный Комплекс АККУ
+# AKKU Car Wash CRM
 
-CRM для приёма машин, управления очередью мойки и отправки клиентам Telegram-статусов.
+This is a car wash management app I built to keep the daily workflow in one place: checking in cars, following each wash stage, looking up customer history, and handling bookings.
 
-## Что умеет приложение
+The interface is available in English and Russian. A demo mode lets visitors try it with sample data.
 
-- Очередь с этапами «Заехал», «Мойка», «Сушка», «Готов».
-- Можно выбрать любой этап вручную, в том числе вернуть автомобиль на предыдущий.
-- Справочник клиентов и машин хранит историю; поиск по госномеру, имени или телефону подсказывает найденного клиента.
-- Для заказа выбирается АККУ ОСНОВНОЙ или АККУ PREMIUM; услугу «Другое» можно описать вручную.
-- Отмена требует причины и попадает в отдельный закрытый раздел; главный администратор может восстановить или удалить отменённый заказ навсегда.
-- Главный администратор входит по отдельному ADMIN_PASSWORD.
-- Сотрудник может писать подписанным Telegram-клиентам о свободных окнах. Клиент подписывается командой /offers, отключает сообщения командой /stop.
-- Редактирование клиента, телефона, госномера, марки, услуги и цены. Нулевую сумму можно сохранить.
-- Выдача автомобиля переносит заказ в архив.
-- Ошибочную запись можно убрать в архив и восстановить обратно.
-- Панель закрыта паролем сотрудника.
-- Клиент подтверждает собственный номер в Telegram. При смене статуса бот присылает новое сообщение и удаляет предыдущее статусное сообщение. Если срок удаления Telegram истёк, бот обновляет старое сообщение.
-- Команда /status показывает активные автомобили клиента.
-- Интерфейс адаптирован для телефона и компьютера.
+## What it does
 
-## Запуск на компьютере
+- Tracks cars from arrival through washing, drying, ready for pickup, parking, and archive.
+- Shows timers for arrival and washing. Staff can move a car to the next stage early.
+- Keeps customer and vehicle details together, with search by plate number, name, or phone.
+- Accepts online bookings and Telegram booking requests.
+- Sends customers Telegram updates when a car's status changes, after they connect their account and confirm their phone number.
+- Separates staff and administrator access. Some actions, such as reviewing archive deletion requests, are administrator-only.
+- Opens a pre-filled WhatsApp message for staff to send manually. WhatsApp messages are not sent automatically.
+- Lets visitors explore the interface in demo mode. Demo changes use sample data in the browser and are not saved to the live database.
 
-1. Установите Node.js 20 или новее.
-2. Создайте бесплатный проект Supabase.
-3. В Supabase откройте SQL Editor и выполните database.sql.
-4. Скопируйте .env.example в .env. Заполните SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, длинный STAFF_PASSWORD и отдельный ADMIN_PASSWORD.
-5. Создайте бота через BotFather. Заполните TELEGRAM_BOT_TOKEN и TELEGRAM_BOT_USERNAME без символа @.
-6. В папке проекта выполните npm install, затем npm start.
-7. Откройте http://localhost:3000 и войдите с STAFF_PASSWORD.
+## Built with
 
-Не добавляйте файл .env в GitHub. В репозитории хранится только .env.example с пустыми примерными значениями. Ключ service role и токен бота доступны только серверу.
+Node.js, Express, Supabase, JavaScript, HTML, CSS, and the Telegram Bot API.
 
-## Подключение Telegram
+## Run locally
 
-Клиент может открыть персональную ссылку, выданную сотрудником, или найти публичного бота и отправить /start. Бот попросит поделиться номером телефона. Телефон в Telegram должен совпасть с номером в заказе. После подтверждения клиент получит текущие статусы и последующие обновления.
+You will need Node.js 20 or later and a Supabase project.
 
-Параметры Render должны включать STAFF_PASSWORD и отдельный ADMIN_PASSWORD. После добавления ADMIN_PASSWORD выполните новый deploy.
+1. Run `database.sql` in the Supabase SQL Editor.
+2. Copy `.env.example` to `.env` and add your Supabase URL and service role key.
+3. Set separate `STAFF_PASSWORD` and `ADMIN_PASSWORD` values.
+4. To enable Telegram, add `TELEGRAM_BOT_TOKEN`, `TELEGRAM_BOT_USERNAME`, and a random `WEBHOOK_SECRET`.
+5. Install dependencies and start the app:
 
-Для адреса веб-сервиса задайте Telegram webhook. Подставьте реальный токен бота, публичный адрес сервиса и WEBHOOK_SECRET:
+   ```sh
+   npm ci
+   npm start
+   ```
 
-https://api.telegram.org/botTOKEN/setWebhook?url=https://YOUR-SERVICE.onrender.com/api/telegram/webhook&secret_token=YOUR_WEBHOOK_SECRET
+6. Open `http://localhost:3000`.
 
-Webhook работает по HTTPS. WEBHOOK_SECRET должен быть случайной строкой из латинских букв и цифр. После замены токена или секрета установите webhook заново.
+Keep `.env` private. Do not commit passwords, Supabase service keys, or Telegram tokens to GitHub.
 
-## Публикация портфолио
+## Deploy
 
-Создайте публичный репозиторий GitHub и загрузите содержимое этой папки. Сначала проверьте, что .env не попал в список файлов Git. Затем подключите репозиторий в Render как Web Service. В репозитории есть render.yaml с бесплатным планом и настройками сборки. Добавьте все секретные переменные в Environment Variables Render и запустите deploy. После успешного deploy установите webhook Telegram на адрес Render.
+The repository includes a `render.yaml` blueprint for deploying the Node.js service on Render. Add the required environment variables in the Render service settings before using the app. GitHub Pages cannot run the Express server or connect to Supabase, so it is not a deployment option for this project.
 
-GitHub Pages предназначен для статических сайтов и не запускает Express API. Для этого проекта нужен Node.js Web Service, например Render.
+After deployment, set the Telegram webhook to the public Render service URL:
 
-## Бесплатный тариф и ограничения
+```text
+https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<PUBLIC_RENDER_URL>/api/telegram/webhook&secret_token=<WEBHOOK_SECRET>
+```
 
-Render Free засыпает после периода без входящих запросов, а первый запрос после сна может ждать около минуты. Файлы на диске Render не являются постоянным хранилищем, поэтому база находится в Supabase. Бесплатный проект Supabase может приостанавливаться при длительной неактивности. Эти ограничения подходят для портфолио и демонстраций; бесплатный хостинг не гарантирует непрерывную доступность.
+For an existing Supabase database, you can run the updated `database.sql` again to apply the safe schema updates.
 
-До публикации используйте тестовые данные. Для реальных клиентских номеров и постоянной работы проверьте правила хранения данных и резервного копирования у выбранного хостинга.
+## Telegram bookings and reminders
 
-## Обновление базы
+Customers can submit booking requests through the Telegram bot or use the online booking form at `/booking.html`. Staff can review Telegram requests in the app. Once a customer connects the bot and confirms the phone number used for the booking, the bot can send status updates.
 
-Если проект Supabase уже создан по предыдущей версии, повторно выполните весь database.sql: команды добавления столбцов используют IF NOT EXISTS.
+The optional reminder function is in `supabase/functions/remind-bookings`. It needs to be deployed and configured in Supabase before scheduled reminders will run.
 
-## Онлайн-запись и напоминания
+## Notes
 
-- Форма клиента находится по адресу /booking.html. Бронь появляется в очереди сотрудников со статусом «Записан».
-- WhatsApp-кнопка открывает готовое напоминание; отправляет его сотрудник. Автоматическую отправку WhatsApp не подключаем, так как официальный Business API не соответствует условию гарантированно бесплатного сервиса.
-- Telegram присылает напоминание примерно за сутки и утром в день записи (после 09:00, время Кызылорды) только клиентам, которые подключили бота и подтвердили номер.
-- Бесплатный Supabase Cron запускает отдельную Edge Function, поэтому Render не должен бодрствовать. Бесплатные проекты могут засыпать или ставиться на паузу из-за неактивности; круглосуточная доставка не гарантируется.
-
-### Настройка Telegram-напоминаний
-
-1. Выполните обновлённый database.sql в Supabase SQL Editor.
-2. Установите Supabase CLI, выполните supabase login и supabase link --project-ref ВАШ_REF.
-3. Добавьте секреты командой supabase secrets set TELEGRAM_BOT_TOKEN=... REMINDER_SECRET=... (используйте длинное случайное значение REMINDER_SECRET).
-4. Разверните функцию: supabase functions deploy remind-bookings.
-5. В Supabase Dashboard → Vault создайте секреты project_url (URL проекта), anon_key (публичный ключ проекта) и reminder_secret (то же значение REMINDER_SECRET).
-6. Выполните в SQL Editor:
-
-select cron.schedule('akku-booking-reminders', '*/5 * * * *', $$
- select net.http_post(
-  url := (select decrypted_secret from vault.decrypted_secrets where name='project_url') || '/functions/v1/remind-bookings',
-  headers := jsonb_build_object('Content-Type','application/json',
-    'apikey',(select decrypted_secret from vault.decrypted_secrets where name='anon_key'),
-    'x-reminder-secret',(select decrypted_secret from vault.decrypted_secrets where name='reminder_secret')),
-  body := '{}'::jsonb, timeout_milliseconds := 10000);
-$$);
-
-Отключение: select cron.unschedule('akku-booking-reminders'); затем удалите функцию и секреты в Supabase. Токен бота отзывается через BotFather. Пароль панели меняется в переменной STAFF_PASSWORD на Render. Секреты не добавляйте в GitHub.
-### Обновление функций CRM
-
-После загрузки новой версии проекта откройте Supabase → SQL Editor и повторно выполните весь `database.sql`. Это добавит историю этапов заказ-наряда, время сушки и очередь запросов на удаление архивных записей.
-
-В Render → Environment добавьте `ADMIN_TELEGRAM_CHAT_ID`, если нужно получать в Telegram уведомления о запросах на удаление. Это числовой ID чата главного администратора; сам администратор должен заранее открыть бота и нажать `/start`. В CRM главный администратор увидит такие запросы в разделе «Архив» и сможет подтвердить или отклонить каждый.
-
-Раздел «Запись» показывает следующие 7 дней и расписание по часам. В Telegram-кнопке записи клиент может выбрать дату сам или запросить ближайшее свободное время; заявка появится сотрудникам в CRM и потребует подтверждения.
-
-Для уведомлений о новых Telegram-заявках можно задать `STAFF_TELEGRAM_CHAT_ID` в Render → Environment. Для этого добавьте бота в рабочую группу, отправьте команду `/start` и укажите числовой ID группы. Эти переменные необязательны для работы CRM: сотрудники всё равно увидят заявки в разделе «Запись», а администратор — запросы на удаление в архиве.
+The demo is for trying the interface, not for entering real customer information. Availability and background jobs depend on the Render and Supabase plans configured for the deployment.
