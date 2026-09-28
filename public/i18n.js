@@ -77,6 +77,7 @@ const translations = {
   "Данные клиента":"Customer details","Подключить Telegram":"Connect Telegram",
   "Записи Telegram":"Telegram Bookings","Попробовать демо":"Try demo","ДЕМО-РЕЖИМ · Только тестовые данные. Изменения временные и останутся только в этом браузере.":"DEMO MODE · Sample data only. Changes are temporary and stay in this browser.","Демо-режим запущен. Используются только тестовые данные.":"Demo mode started. Sample data only.",
   "До окончания мойки ":"Wash ends in ","Мойка завершена · можно нажать «На сушку»":"Wash complete · select “Start drying”","Мойка начинается автоматически":"Washing starts automatically",
+  "Прервать мойку":"Stop wash","Прервать мойку и переместить заказ в архив отменённых?":"Stop the wash and move this order to the cancelled archive?","Мойка остановлена. Заказ перемещён в архив и отмечен красным.":"Wash stopped. The order was moved to the archive and marked in red.","Отменён / прерван":"Cancelled / interrupted","Кто оформил":"Created by","Не указан":"Not specified","Мойка началась":"Wash started","Сушка началась":"Drying started","Автомобиль готов":"Vehicle ready","На парковке":"In parking","Выдан / архив":"Issued / archived","Причина отмены / остановки":"Cancellation / stop reason","WhatsApp Записи":"WhatsApp Bookings","Недоступно":"Unavailable",
 };
 const attrTranslations = {
   "Пароль сотрудника или главного администратора":"Staff or administrator password",

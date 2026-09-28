@@ -37,6 +37,7 @@ create table if not exists wash_orders (
  cancellation_reason text,
  cancelled_at timestamptz,
  cancelled_by text,
+ created_by text,
  scheduled_for timestamptz,
  reminder_day_sent_at timestamptz,
  reminder_today_sent_at timestamptz,
@@ -57,6 +58,7 @@ alter table wash_orders add column if not exists cancelled boolean not null defa
 alter table wash_orders add column if not exists cancellation_reason text;
 alter table wash_orders add column if not exists cancelled_at timestamptz;
 alter table wash_orders add column if not exists cancelled_by text;
+alter table wash_orders add column if not exists created_by text;
 alter table wash_orders add column if not exists telegram_message_id bigint;
 alter table wash_orders add column if not exists scheduled_for timestamptz;
 alter table wash_orders add column if not exists reminder_day_sent_at timestamptz;
