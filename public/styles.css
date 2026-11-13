@@ -31,3 +31,7 @@ html{scroll-behavior:smooth}body{background:#f5f7f6;color:#17241f}button,input,s
 .nav-coming{cursor:not-allowed;opacity:.58}.nav-coming small{display:block;margin-left:auto;background:#f2f3f2;color:#7d8782}.telegram-count{right:10px;left:auto;top:50%;transform:translateY(-50%);min-width:19px;height:19px;line-height:17px;padding:1px 5px;display:inline-flex;align-items:center;justify-content:center}
 @media(max-width:700px){.telegram-count{right:10px;top:50%;transform:translateY(-50%)}.order-actions .interrupt{min-height:36px}}
 .telegram-count[hidden]{display:none!important}
+.uverian-footer-logo{display:flex;width:min(300px,100%);margin:24px auto 0;opacity:.96;transition:opacity .18s ease}
+.uverian-footer-logo:hover{opacity:1}
+.uverian-footer-logo img{display:block;width:100%;height:auto}
+@media(max-width:700px){.uverian-footer-logo{width:min(235px,78%);margin-top:20px}}

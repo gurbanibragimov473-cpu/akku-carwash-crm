@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 470 96" role="img" aria-labelledby="title">
+  <title id="title">Uverian.com</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#202833"/>
+      <stop offset="1" stop-color="#080d13"/>
+    </linearGradient>
+    <linearGradient id="symbol" x1="0" y1="0" x2="0.8" y2="1">
+      <stop stop-color="#fff"/>
+      <stop offset="1" stop-color="#c9d0d9"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="90" height="90" rx="25" fill="url(#tile)"/>
+  <path d="M23 21 39 30c4 2 6 6 6 11v10c0 6 3 10 8 13 5-3 8-7 8-13V41c0-5 2-9 6-11l16-10v29c0 18-8 29-23 37l-7 4-14-8C25 74 17 63 17 49V25c0-4 3-6 6-4Z" fill="url(#symbol)"/>
+  <text x="112" y="65" font-family="Manrope, Arial, sans-serif" font-size="52" font-weight="800" letter-spacing="-2.2" fill="#111820">Uverian</text>
+  <text x="305" y="65" font-family="Manrope, Arial, sans-serif" font-size="52" font-weight="800" letter-spacing="-2.2" fill="#89919c">.com</text>
+</svg>
