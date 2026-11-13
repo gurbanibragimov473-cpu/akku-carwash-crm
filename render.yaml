@@ -7,7 +7,7 @@ services:
     startCommand: npm start
     healthCheckPath: /health
     domains:
-      - crm.uverian.com
+      - akku.uverian.com
     envVars:
       - key: NODE_ENV
         value: production
