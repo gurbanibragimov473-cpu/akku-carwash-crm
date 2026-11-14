@@ -77,7 +77,7 @@ const translations = {
   "Данные клиента":"Customer details","Подключить Telegram":"Connect Telegram",
   "Записи Telegram":"Telegram Bookings","Попробовать демо":"Try demo","ДЕМО-РЕЖИМ · Только тестовые данные. Изменения временные и останутся только в этом браузере.":"DEMO MODE · Sample data only. Changes are temporary and stay in this browser.","Демо-режим запущен. Используются только тестовые данные.":"Demo mode started. Sample data only.",
   "До окончания мойки ":"Wash ends in ","Мойка завершена · можно нажать «На сушку»":"Wash complete · select “Start drying”","Мойка начинается автоматически":"Washing starts automatically",
-  "Прервать мойку":"Stop wash","Прервать мойку и переместить заказ в архив отменённых?":"Stop the wash and move this order to the cancelled archive?","Мойка остановлена. Заказ перемещён в архив и отмечен красным.":"Wash stopped. The order was moved to the archive and marked in red.","Отменён / прерван":"Cancelled / interrupted","Кто оформил":"Created by","Не указан":"Not specified","Мойка началась":"Wash started","Сушка началась":"Drying started","Автомобиль готов":"Vehicle ready","На парковке":"In parking","Выдан / архив":"Issued / archived","Причина отмены / остановки":"Cancellation / stop reason","WhatsApp Записи":"WhatsApp Bookings","Недоступно":"Unavailable",
+  "Прервать мойку":"Stop wash","Прервать мойку и переместить заказ в архив отменённых?":"Stop the wash and move this order to the cancelled archive?","Мойка остановлена. Заказ перемещён в архив и отмечен красным.":"Wash stopped. The order was moved to the archive and marked in red.","Отменён / прерван":"Cancelled / interrupted","Кто оформил":"Created by","Не указан":"Not specified","Мойка началась":"Wash started","Сушка началась":"Drying started","Автомобиль готов":"Vehicle ready","На парковке":"In parking","Выдан / архив":"Issued / archived","Причина отмены / остановки":"Cancellation / stop reason","WhatsApp Записи":"WhatsApp Bookings","Недоступно":"Unavailable","Настройки":"Settings","Язык интерфейса":"Interface language","Выберите язык всех экранов":"Choose the language for all screens","Автообновление очереди":"Queue auto-refresh","Частота обновления":"Refresh interval","Каждые 15 секунд":"Every 15 seconds","Каждые 30 секунд":"Every 30 seconds","Каждую минуту":"Every minute","Выключено":"Off","Настройки сохраняются в этом браузере.":"Settings are saved in this browser.","Язык и обновление очереди.":"Language and queue updates.","Настройки интерфейса":"Interface settings","Настройки сохранены.":"Settings saved.",
 };
 const attrTranslations = {
   "Пароль сотрудника или главного администратора":"Staff or administrator password",
@@ -156,7 +156,11 @@ const kazakhTranslations = {
   "Недоступно":"Қолжетімсіз", "Прервать мойку":"Жууды тоқтату", "Мойка началась":"Жуу басталды",
   "Сушка началась":"Кептіру басталды", "Автомобиль готов":"Көлік дайын", "Выгнать авто на парковку":"Көлікті тұраққа шығару",
   "Отправить в архив":"Мұрағатқа жіберу", "Подробнее":"Толығырақ", "Запросить удаление":"Жоюды сұрау",
-  "Записи Telegram":"Telegram жазбалары", "WhatsApp Записи":"WhatsApp жазбалары", "Язык":"Тіл", "Language":"Тіл"
+  "Записи Telegram":"Telegram жазбалары", "WhatsApp Записи":"WhatsApp жазбалары", "Язык":"Тіл", "Language":"Тіл",
+  "Настройки":"Баптаулар", "Язык интерфейса":"Интерфейс тілі", "Выберите язык всех экранов":"Барлық экрандардың тілін таңдаңыз", "Автообновление очереди":"Кезекті автоматты жаңарту",
+  "Частота обновления":"Жаңарту жиілігі", "Каждые 15 секунд":"Әр 15 секунд сайын", "Каждые 30 секунд":"Әр 30 секунд сайын",
+  "Каждую минуту":"Әр минут сайын", "Выключено":"Өшірулі", "Настройки сохраняются в этом браузере.":"Баптаулар осы браузерде сақталады.",
+  "Язык и обновление очереди.":"Тіл мен кезекті жаңарту.", "Настройки интерфейса":"Интерфейс баптаулары", "Настройки сохранены.":"Баптаулар сақталды."
 };
 let language = localStorage.getItem("akku-language") || "en";
 if (!(["en", "ru", "kk"].includes(language))) language = "en";

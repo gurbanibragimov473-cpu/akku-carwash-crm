@@ -65,3 +65,17 @@ button:disabled{cursor:not-allowed}
 
 /* Manrope includes the Cyrillic Extended subset used by Kazakh. Keep the same face in every language. */
 @media(max-width:900px) and (min-width:701px){header{align-items:flex-start;gap:14px;flex-wrap:wrap}header>div{min-width:0}.header-actions{flex-wrap:wrap;justify-content:flex-start;margin-left:0;width:100%;max-width:100%;gap:6px}.header-actions button{font-size:11px!important;white-space:normal;min-width:0}.main{overflow-x:hidden}.stats{gap:8px}.stat{padding:15px 12px}.stat>span{font-size:8px;letter-spacing:.55px;padding-right:0}.stat i{display:none}.stat strong{font-size:24px}.stat small{font-size:9px}}
+
+.settings-panel{max-width:820px;margin:26px auto 0}
+.settings-card{padding:28px 30px;background:#fff;border:1px solid #e5ebe7;box-shadow:0 10px 30px #1e35220a}
+.settings-card h2{margin:5px 0 23px;font-size:20px;letter-spacing:-.35px;color:#1c2c23}
+.settings-grid{display:grid;gap:0}
+.setting-row{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:18px 0;border-top:1px solid #edf0ee}
+.setting-row>span{display:grid;gap:5px}
+.setting-row strong{color:#25372d;font-size:13px}
+.setting-row small,.setting-hint{color:#849189;font-size:11px;line-height:1.55}
+.setting-row select{min-width:205px;height:42px;padding:0 11px;border:1px solid #dce5df;border-radius:0;background:#fff;color:#22362a;font:600 12px Manrope,Arial,sans-serif}
+.setting-row select:focus-visible{outline:3px solid #9ccfb0;outline-offset:2px}
+.setting-hint{margin:14px 0 0}
+html[lang="kk"] body,html[lang="kk"] body *{font-family:Manrope,Arial,sans-serif;font-synthesis:none}
+@media(max-width:700px){.settings-panel{margin-top:18px}.settings-card{padding:20px 17px}.settings-card h2{font-size:18px;margin-bottom:15px}.setting-row{align-items:flex-start;flex-direction:column;gap:10px}.setting-row select{width:100%;min-width:0}}

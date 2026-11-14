@@ -2,7 +2,7 @@
 
 This is a car wash management app I built to keep the daily workflow in one place: checking in cars, following each wash stage, looking up customer history, and handling bookings.
 
-The interface is available in English and Russian. A demo mode lets visitors try it with sample data.
+The interface is available in English, Russian, and Kazakh. Settings let staff choose the interface language and queue auto-refresh interval. A demo mode lets visitors try it with sample data.
 
 ## What it does
 

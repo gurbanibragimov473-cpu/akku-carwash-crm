@@ -235,6 +235,20 @@ test('database migration closes customer/order tables and protects all booking e
   assert.match(sql, /grant execute on function public\.book_public_order[\s\S]*to service_role/i);
 });
 
+test('settings menu exposes saved language and queue refresh preferences', () => {
+  const html = fs.readFileSync(path.resolve(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const app = fs.readFileSync(path.resolve(__dirname, '..', 'public', 'app.js'), 'utf8');
+  const styles = fs.readFileSync(path.resolve(__dirname, '..', 'public', 'styles.css'), 'utf8');
+  const i18n = fs.readFileSync(path.resolve(__dirname, '..', 'public', 'i18n.js'), 'utf8');
+  assert.match(html, /data-view="settings"/);
+  assert.match(html, /id="settings-language" data-language/);
+  assert.match(html, /id="queue-refresh-frequency"/);
+  assert.match(app, /akku-queue-refresh-ms/);
+  assert.match(app, /setInterval\(\(\)=>\{if\(!\$\('login-dialog'\)\.open&&view!=='settings'\)load\(\);\},ms\)/);
+  assert.match(styles, /html\[lang="kk"\] body,html\[lang="kk"\] body \*/);
+  assert.match(i18n, /"Настройки":"Баптаулар"/);
+});
+
 test('login throttles repeated wrong passwords', async () => {
   const port = await freePort();
   const appOrigin = `http://127.0.0.1:${port}`;
