@@ -48,14 +48,16 @@ After deployment, set the Telegram webhook to the public Render service URL:
 https://api.telegram.org/bot<TELEGRAM_BOT_TOKEN>/setWebhook?url=<PUBLIC_RENDER_URL>/api/telegram/webhook&secret_token=<WEBHOOK_SECRET>
 ```
 
-For an existing Supabase database, you can run the updated `database.sql` again to apply the safe schema updates.
+For an existing Supabase database, run the updated `database.sql` in the Supabase SQL Editor before deploying the matching app version. It enables RLS on customer/order data and installs the atomic booking functions and overlap trigger. The public booking endpoint requires this migration and fails closed until it exists.
+
+Run `npm test` before deploying. Tests use a local mock database and do not modify production data. The Render blueprint trusts the two public proxy hops used in front of the app so request throttling uses the visitor IP.
 
 ## Telegram bookings and reminders
 
 Customers can submit booking requests through the Telegram bot or use the online booking form at `/booking.html`. Staff can review Telegram requests in the app. Once a customer connects the bot and confirms the phone number used for the booking, the bot can send status updates.
 
-The optional reminder function is in `supabase/functions/remind-bookings`. It needs to be deployed and configured in Supabase before scheduled reminders will run.
+The optional reminder function is in `supabase/functions/remind-bookings`. It needs to be deployed and separately scheduled/configured in Supabase before reminders will run; the current database migration does not create that schedule.
 
 ## Notes
 
-The demo is for trying the interface, not for entering real customer information. Availability and background jobs depend on the Render and Supabase plans configured for the deployment.
+The demo is for trying the interface, not for entering real customer information. Render Free sleeps after 15 minutes without incoming traffic and may take about a minute to wake up; automated queue stages are processed on the next CRM request after wake-up. Free hosting cannot guarantee exact background timing or uninterrupted availability. See the Render free-plan limits: https://render.com/docs/free.

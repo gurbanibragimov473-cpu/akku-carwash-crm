@@ -40,3 +40,28 @@ html{scroll-behavior:smooth}body{background:#f5f7f6;color:#17241f}button,input,s
 .uverian-sidebar-logo:hover{opacity:1}
 .uverian-sidebar-logo img{display:block;width:100%;height:auto}
 @media(max-width:700px){.side-bottom{display:none}}
+
+/* Crisp button system; preserve the shape of cards, fields, badges, and icons. */
+button,.button{border-radius:0!important;font-weight:700;line-height:1.35;transition:background-color .16s ease,border-color .16s ease,color .16s ease,box-shadow .16s ease,transform .16s ease}
+button:not(:disabled):hover{transform:translateY(-1px)}
+button:active{transform:translateY(0);box-shadow:none}
+button:focus-visible,.button:focus-visible{outline:3px solid #9ccfb0;outline-offset:2px}
+button:disabled{cursor:not-allowed}
+.primary{min-height:44px;padding:0 17px;border:1px solid #176b53;border-left:4px solid #104c3b;background:#176b53;box-shadow:0 2px 0 #104c3b;font-size:13px;letter-spacing:.02em}
+.primary:hover{background:#105940;box-shadow:0 3px 0 #0b4533}
+.next{min-height:40px;padding:0 12px;border:1px solid #cbdcd1;border-left:3px solid #176b53;background:#fff;font-size:11px;letter-spacing:.01em}
+.next:hover{background:#edf7f1;border-color:#8cb99e;color:#105940}
+.next[data-next='washing']{background:#16834d;border-color:#16834d;border-left-color:#0d5e37;box-shadow:0 2px 0 #0d5e37;color:#fff}
+.next[data-next='washing']:hover{background:#106b3e}
+.edit,.logout{min-height:40px;padding:0 12px;border:1px solid #d7e0da;background:#fff;font-size:11px;letter-spacing:.02em}
+.edit:hover,.logout:hover,.icon-button:hover,.close:hover{background:#f0f6f2;border-color:#9dbca8;color:#145c45}
+.view-button{min-height:40px;border:1px solid #d7e0da;font-size:11px;letter-spacing:.03em}
+.view-button.active{background:#176b53;border-color:#176b53;box-shadow:inset 0 -3px 0 #0e4e3a}
+.tab{border-bottom:2px solid transparent;font-size:12px}
+.tab.selected{background:transparent;border-bottom-color:#176b53;color:#145c45}
+.demo-entry{min-height:44px;border-width:1px;border-left:4px solid #b42318;box-shadow:none;letter-spacing:.02em;font-size:13px}
+.demo-entry:hover{transform:translateY(-1px);box-shadow:0 2px 0 #b4231830}
+@media(max-width:700px){.order-actions .edit,.order-actions .next{min-height:40px;padding:0 10px;font-size:11px}.header-actions .primary{font-size:12px}.edit{padding:0 10px;font-size:11px}}
+
+/* Manrope includes the Cyrillic Extended subset used by Kazakh. Keep the same face in every language. */
+@media(max-width:900px) and (min-width:701px){header{align-items:flex-start;gap:14px;flex-wrap:wrap}header>div{min-width:0}.header-actions{flex-wrap:wrap;justify-content:flex-start;margin-left:0;width:100%;max-width:100%;gap:6px}.header-actions button{font-size:11px!important;white-space:normal;min-width:0}.main{overflow-x:hidden}.stats{gap:8px}.stat{padding:15px 12px}.stat>span{font-size:8px;letter-spacing:.55px;padding-right:0}.stat i{display:none}.stat strong{font-size:24px}.stat small{font-size:9px}}

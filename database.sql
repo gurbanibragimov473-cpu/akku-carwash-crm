@@ -186,3 +186,83 @@ update wash_orders o set stage_history=coalesce((select jsonb_agg(jsonb_build_ob
 alter table wash_orders add column if not exists parked_at timestamptz;
 alter table wash_orders drop constraint if exists wash_orders_status_check;
 alter table wash_orders add constraint wash_orders_status_check check(status in ('booked','arrived','washing','drying','ready','parked','closed'));
+
+-- Sensitive customer and order data must never be available to anon/authenticated API keys.
+-- The Express backend uses the service role key and continues to access these tables.
+alter table customers enable row level security;
+alter table wash_orders enable row level security;
+
+-- Make public website booking atomic: simultaneous requests for the same site/time window
+-- cannot both pass the availability check. This uses PostgreSQL's built-in advisory lock.
+create or replace function public.book_public_order(
+ p_name text,p_phone text,p_plate text,p_vehicle text,p_service text,p_scheduled_for timestamptz,p_wash_site text
+) returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+ v_customer customers%rowtype;
+ v_car cars%rowtype;
+ v_order wash_orders%rowtype;
+ v_link_code text;
+ v_stamp timestamptz := now();
+begin
+ if p_wash_site not in ('akku','premium') then raise exception 'INVALID_WASH_SITE'; end if;
+ perform pg_advisory_xact_lock(hashtext('akku-public-booking'));
+ if exists (
+  select 1 from wash_orders
+  where wash_site=p_wash_site and status='booked' and cancelled=false and voided=false
+   and scheduled_for between p_scheduled_for - interval '1 hour' and p_scheduled_for + interval '1 hour'
+  union all
+  select 1 from booking_requests
+  where wash_site=p_wash_site and state in ('pending','alternative')
+   and coalesce(proposed_for,requested_for) between p_scheduled_for - interval '1 hour' and p_scheduled_for + interval '1 hour'
+ ) then raise exception 'BOOKING_SLOT_TAKEN'; end if;
+
+ insert into customers(name,phone) values (p_name,p_phone)
+ on conflict (phone) do update set name=excluded.name
+ returning * into v_customer;
+ if v_customer.telegram_chat_id is null then
+  update customers set link_code=coalesce(link_code,substr(replace(gen_random_uuid()::text,'-',''),1,24))
+  where id=v_customer.id returning link_code into v_link_code;
+ end if;
+
+ insert into cars(customer_id,plate,vehicle,last_seen_at)
+ values(v_customer.id,p_plate,p_vehicle,v_stamp)
+ on conflict (plate) do update set customer_id=excluded.customer_id,vehicle=excluded.vehicle,last_seen_at=excluded.last_seen_at
+ returning * into v_car;
+
+ insert into wash_orders(customer_id,car_id,plate,vehicle,service,price,status,stage_history,scheduled_for,wash_site,booking_source,created_by)
+ values(v_customer.id,v_car.id,v_car.plate,v_car.vehicle,p_service,0,'booked',jsonb_build_array(jsonb_build_object('status','booked','at',v_stamp)),p_scheduled_for,p_wash_site,'website','Клиент через сайт')
+ returning * into v_order;
+ return jsonb_build_object('order',jsonb_build_object('id',v_order.id,'scheduled_for',v_order.scheduled_for),'link_code',v_link_code);
+end;
+$$;
+revoke all on function public.book_public_order(text,text,text,text,text,timestamptz,text) from public, anon, authenticated;
+grant execute on function public.book_public_order(text,text,text,text,text,timestamptz,text) to service_role;
+
+-- Enforce the same one-hour spacing rule for staff, Telegram, and website bookings.
+create or replace function public.prevent_overlapping_wash_bookings()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+ if new.status='booked' and new.cancelled=false and new.voided=false and new.scheduled_for is not null then
+  perform pg_advisory_xact_lock(hashtext('akku-public-booking'));
+  if exists (
+   select 1 from wash_orders o
+   where o.id<>new.id and o.wash_site=new.wash_site and o.status='booked'
+    and o.cancelled=false and o.voided=false
+    and o.scheduled_for between new.scheduled_for - interval '1 hour' and new.scheduled_for + interval '1 hour'
+  ) then raise exception using errcode='23P01', message='BOOKING_SLOT_TAKEN'; end if;
+ end if;
+ return new;
+end;
+$$;
+drop trigger if exists wash_orders_booking_overlap_guard on wash_orders;
+create trigger wash_orders_booking_overlap_guard
+before insert or update of status,scheduled_for,wash_site,cancelled,voided on wash_orders
+for each row execute function public.prevent_overlapping_wash_bookings();
