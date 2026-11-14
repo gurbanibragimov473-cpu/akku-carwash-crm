@@ -12,7 +12,7 @@ $('date-label').textContent=headerDateLabel();
 function esc(v=''){return String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function whatsappPhone(v=''){let d=String(v).replace(/\D/g,'');if(d.length===11&&d[0]==='8')d='7'+d.slice(1);if(d.length===10)d='7'+d;return d;}
 function money(v){const amount=Number(v)||0;if(language==='kk')return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(amount)+' ₸';return new Intl.NumberFormat(uiLocale(),{style:'currency',currency:'KZT',maximumFractionDigits:0}).format(amount);}
-function toast(t){const e=$('toast');clearTimeout(toastTimer);e.textContent=t;document.body.classList.add('notification-push');e.classList.add('show');toastTimer=setTimeout(()=>{e.classList.remove('show');document.body.classList.remove('notification-push');},3200);}
+function toast(t){const e=$('toast');clearTimeout(toastTimer);e.textContent=t;e.classList.add('show');toastTimer=setTimeout(()=>e.classList.remove('show'),3200);}
 async function api(url,options={}){if(demoMode)return demoApi(url,options);const r=await fetch(url,{...options,headers:{'content-type':'application/json',...(options.headers||{})}}),d=await r.json().catch(()=>({}));if(!r.ok){if(r.status===401){const m=$('login-dialog');if(!m.open)m.showModal();}throw Error(d.error||'Ошибка запроса.');}return d;}
 function demoApi(url,options={}){
  const path=url.split('?')[0],method=options.method||'GET',body=options.body?JSON.parse(options.body):{},now=new Date().toISOString(),byId=id=>demoOrders.find(o=>o.id===id),at=path.match(/^\/api\/orders\/([^/]+)/)?.[1];
