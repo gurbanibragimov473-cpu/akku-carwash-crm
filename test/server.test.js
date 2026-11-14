@@ -243,6 +243,9 @@ test('settings menu exposes saved language and queue refresh preferences', () =>
   assert.match(html, /data-view="settings"/);
   assert.match(html, /id="settings-language" data-language/);
   assert.match(html, /id="queue-refresh-frequency"/);
+  assert.match(html, /i18n\.js\?v=/);
+  assert.match(html, /app\.js\?v=/);
+  assert.match(html, /styles\.css\?v=/);
   assert.match(app, /akku-queue-refresh-ms/);
   assert.match(app, /setInterval\(\(\)=>\{if\(!\$\('login-dialog'\)\.open&&view!=='settings'\)load\(\);\},ms\)/);
   assert.match(styles, /html\[lang="kk"\] body,html\[lang="kk"\] body \*/);
