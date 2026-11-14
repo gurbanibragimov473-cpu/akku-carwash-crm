@@ -95,3 +95,6 @@ body.notification-push .sidebar,body.notification-push .main{transform:translate
 .mark{display:none}
 .portal-signature{line-height:1.6}
 .portal-signature a{color:#176b53;font-weight:800}
+
+/* Square corner treatment across every CRM element and state. */
+*,*::before,*::after{border-radius:0!important}
