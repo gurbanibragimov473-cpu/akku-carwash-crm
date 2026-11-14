@@ -88,3 +88,10 @@ html[lang="kk"] .demo-banner{font-size:12px;letter-spacing:0;font-weight:700}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 body.notification-push .sidebar,body.notification-push .main{transform:translateY(52px);transition:transform .42s cubic-bezier(.2,.8,.25,1)}
 @media(prefers-reduced-motion:reduce){.toast,body.notification-push .sidebar,body.notification-push .main{transition-duration:.01ms}}
+
+/* Compact green wordmark without a separate initial icon or rounded corners. */
+.brand{width:max-content;max-width:100%;gap:0;padding:10px 14px;background:#176b53;color:#fff;border-radius:0}
+.brand small{color:#e3f2e9;letter-spacing:.85px}
+.mark{display:none}
+.portal-signature{line-height:1.6}
+.portal-signature a{color:#176b53;font-weight:800}
