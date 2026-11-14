@@ -79,3 +79,12 @@ button:disabled{cursor:not-allowed}
 .setting-hint{margin:14px 0 0}
 html[lang="kk"] body,html[lang="kk"] body *{font-family:Manrope,Arial,sans-serif;font-synthesis:none}
 @media(max-width:700px){.settings-panel{margin-top:18px}.settings-card{padding:20px 17px}.settings-card h2{font-size:18px;margin-bottom:15px}.setting-row{align-items:flex-start;flex-direction:column;gap:10px}.setting-row select{width:100%;min-width:0}}
+
+/* Kazakh glyphs use one consistent family, including the extended Cyrillic characters. */
+html[lang="kk"] body,html[lang="kk"] body *{font-family:"Noto Sans",Manrope,Arial,sans-serif;font-synthesis:none}
+html[lang="kk"] .demo-banner{font-size:12px;letter-spacing:0;font-weight:700}
+/* iOS-inspired top notification with a temporary page drop. */
+.toast{top:14px;right:auto;bottom:auto;left:50%;z-index:10000;min-width:min(280px,calc(100vw - 32px));max-width:min(440px,calc(100vw - 32px));padding:14px 20px;border:1px solid #ffffff38;border-radius:13px;background:linear-gradient(180deg,#343a40f2,#16191df5);color:#fff;text-align:center;font-size:13px;font-weight:650;line-height:1.4;box-shadow:0 8px 24px #10182035;backdrop-filter:blur(12px);opacity:0;transform:translate(-50%,-145%);transition:opacity .28s ease,transform .38s cubic-bezier(.2,.8,.25,1)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+body.notification-push .sidebar,body.notification-push .main{transform:translateY(52px);transition:transform .42s cubic-bezier(.2,.8,.25,1)}
+@media(prefers-reduced-motion:reduce){.toast,body.notification-push .sidebar,body.notification-push .main{transition-duration:.01ms}}

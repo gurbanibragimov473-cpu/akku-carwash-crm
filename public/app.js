@@ -2,7 +2,7 @@ const labels={booked:'Записан',arrived:'Заехал',washing:'Мойка
 const next={booked:'arrived',arrived:'washing',washing:'drying',drying:'ready',ready:'parked'};
 const nextText={arrived:'Начать мойку',washing:'На сушку',drying:'Автомобиль готов',ready:'Выдать · в архив'};
 const sites={akku:'АККУ ОСНОВНОЙ',premium:'АККУ PREMIUM'};
-let orders=[],customers=[],deleteRequests=[],filter='all',view='queue',role='staff',editingId=null,cancelId=null,suggestTimer,demoMode=false,demoOrders=[],demoBookingRequests=[],demoDeleteRequests=[],lastTelegramCount=0,savingOrder=false,queueRefreshTimer;
+let orders=[],customers=[],deleteRequests=[],filter='all',view='queue',role='staff',editingId=null,cancelId=null,suggestTimer,demoMode=false,demoOrders=[],demoBookingRequests=[],demoDeleteRequests=[],lastTelegramCount=0,savingOrder=false,queueRefreshTimer,toastTimer;
 const $=id=>document.getElementById(id);
 const queueRefreshMs=()=>{const saved=localStorage.getItem('akku-queue-refresh-ms'),value=saved===null?15000:Number(saved);return [0,15000,30000,60000].includes(value)?value:15000;};
 function configureQueueRefresh(value){const ms=Number(value);if(![0,15000,30000,60000].includes(ms))return;localStorage.setItem('akku-queue-refresh-ms',String(ms));$('queue-refresh-frequency').value=String(ms);clearInterval(queueRefreshTimer);if(ms)queueRefreshTimer=setInterval(()=>{if(!$('login-dialog').open&&view!=='settings')load();},ms);}
@@ -12,7 +12,7 @@ $('date-label').textContent=headerDateLabel();
 function esc(v=''){return String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 function whatsappPhone(v=''){let d=String(v).replace(/\D/g,'');if(d.length===11&&d[0]==='8')d='7'+d.slice(1);if(d.length===10)d='7'+d;return d;}
 function money(v){const amount=Number(v)||0;if(language==='kk')return new Intl.NumberFormat('ru-RU',{maximumFractionDigits:0}).format(amount)+' ₸';return new Intl.NumberFormat(uiLocale(),{style:'currency',currency:'KZT',maximumFractionDigits:0}).format(amount);}
-function toast(t){const e=$('toast');e.textContent=t;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3200);}
+function toast(t){const e=$('toast');clearTimeout(toastTimer);e.textContent=t;document.body.classList.add('notification-push');e.classList.add('show');toastTimer=setTimeout(()=>{e.classList.remove('show');document.body.classList.remove('notification-push');},3200);}
 async function api(url,options={}){if(demoMode)return demoApi(url,options);const r=await fetch(url,{...options,headers:{'content-type':'application/json',...(options.headers||{})}}),d=await r.json().catch(()=>({}));if(!r.ok){if(r.status===401){const m=$('login-dialog');if(!m.open)m.showModal();}throw Error(d.error||'Ошибка запроса.');}return d;}
 function demoApi(url,options={}){
  const path=url.split('?')[0],method=options.method||'GET',body=options.body?JSON.parse(options.body):{},now=new Date().toISOString(),byId=id=>demoOrders.find(o=>o.id===id),at=path.match(/^\/api\/orders\/([^/]+)/)?.[1];
