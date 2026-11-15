@@ -135,6 +135,35 @@ body.notification-push .sidebar,body.notification-push .main{transform:none!impo
 .stat>i{position:absolute;z-index:0;top:auto;right:16px;bottom:4px;display:grid;width:auto;height:auto;padding:0;border:0;border-radius:0;background:transparent!important;color:#176b53!important;font-size:clamp(48px,5.5vw,76px);font-weight:800;line-height:.85;opacity:.075;pointer-events:none;transform:rotate(-8deg)}
 .stat>i.green{color:#13825b!important}.stat>i.gold{color:#c08b24!important}
 .stage:before{content:none!important;display:none!important}
+
+/* Stable controls: state changes affect color only, never the button's position or size. */
+button,.button{transition:background-color .14s ease,border-color .14s ease,color .14s ease,box-shadow .14s ease!important;transform:none!important}
+button:not(:disabled):hover,button:active,.demo-entry:hover,.order:hover,.stat:hover{transform:none!important}
+button:active{box-shadow:none!important}
+button:focus-visible,.button:focus-visible{outline:2px solid #347b5f;outline-offset:2px}
+.stat,.order{transition:border-color .14s ease,box-shadow .14s ease!important}
+.stat:hover,.order:hover{box-shadow:0 3px 12px #17241f08}
+.order.washing,.order.drying,.order.phase-progress,.order.phase-progress-drying{animation:none!important;background-size:auto!important}
+.order.washing::after,.order.drying::after,.order.delete-pending::after{animation:none!important}
+.order.ready::after,.next[data-close]{animation:none!important}
+.order.phase-progress::before,.order.phase-progress-drying::before{animation:none!important;transition:none!important}
+.telegram-count.notification-pulse{animation:none!important}
+.order.phase-progress::before{background:linear-gradient(90deg,rgba(211,232,255,.92) 0 var(--phase-progress),#fff var(--phase-progress) 100%)}
+.order.phase-progress-drying::before{background:linear-gradient(90deg,#fff 0%,#e5f2ff 40%,#d5eaff 60%,#fff 100%)}
+.phase-caption{min-height:2.8em;max-width:19ch;font-variant-numeric:tabular-nums;line-height:1.4;white-space:normal}
+.order-actions{align-items:stretch;gap:6px}
+.order-actions button,.order-actions a{min-height:38px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;line-height:1.25;text-align:center}
+.next,.edit,.logout,.view-button,.primary,.icon-button,.close{font-weight:750;letter-spacing:.025em}
+.next{box-shadow:inset 2px 0 0 #176b53}
+.next[data-next='washing']{box-shadow:inset 2px 0 0 #0d5e37}
+.header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+.header-actions button{min-height:42px}
+.toolbar{gap:8px}
+.empty{border-style:solid;border-color:#e6ece8;background:linear-gradient(135deg,#fff,#f8faf9)}
+@media(max-width:700px){.order-actions{max-width:min(52vw,230px)}.order-actions button,.order-actions a{min-height:38px;padding:0 9px}.phase-caption{max-width:17ch;min-height:2.8em}.header-actions{gap:5px}}
+.demo-banner-close{top:10px!important;transform:none!important}
+@media(max-width:1400px) and (min-width:701px){.main{min-width:0}.toolbar{flex-wrap:wrap}.views{order:0;flex:1}.search{order:1;flex:1;min-width:160px}.icon-button{order:2;min-width:82px}.tabs{order:3;flex:0 0 100%;overflow-x:auto;scrollbar-width:none}.tabs::-webkit-scrollbar{display:none}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 .icon-button{width:auto;min-width:82px;padding:0 12px;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
 .close{width:auto;min-width:72px;height:34px;padding:0 10px;border:1px solid #e1e7e3;border-radius:0;background:#fff;color:#65736b;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 .close:hover{background:#f2f5f3}
