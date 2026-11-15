@@ -205,3 +205,18 @@ button:active,.button:active,.next:active,.booking-login-link:active{transform:n
 @keyframes booking-glass-loader{0%{transform:skewX(-18deg) translateX(-190%)}65%,100%{transform:skewX(-18deg) translateX(420%)}}
 .booking-login-link:hover{background:linear-gradient(180deg,#ffffff42,transparent 60%),linear-gradient(135deg,#258ed2,#126ba9);border-color:#ffffffcf;color:#fff!important;box-shadow:inset 0 1px #ffffffbd,0 6px 17px #1775b74a}
 @media(prefers-reduced-motion:reduce){.booking-login-link::before{animation:none!important;transform:skewX(-18deg) translateX(70%)}}
+
+/* Water-like highlights and ripple transitions, with square, shadow-free controls. */
+button,button[class],a.next,.booking-login-link,.login-dialog .demo-entry,.demo-banner-close{border-radius:0!important;box-shadow:none!important;transform:none!important;filter:none!important}
+button:active,button:hover,button[class]:active,button[class]:hover,a.next:active,a.next:hover,.booking-login-link:active,.booking-login-link:hover{box-shadow:none!important;transform:none!important;filter:none!important}
+.primary,.primary:hover{box-shadow:none!important}
+.login-dialog .demo-entry,.login-dialog .demo-entry:hover{box-shadow:none!important}
+.booking-login-link,.booking-login-link:hover{box-shadow:none!important}
+.booking-login-link::before{background:repeating-radial-gradient(ellipse at 45% 135%,transparent 0 9px,#ffffff3d 10px 12px,transparent 13px 24px),linear-gradient(100deg,transparent 0%,#ffffff22 22%,#ffffffa6 48%,#ffffff36 62%,transparent 82%);background-size:130px 100%,220% 100%;animation:booking-water-flow 1.8s cubic-bezier(.35,.05,.25,1) infinite;filter:none;transform:translateX(-110%)}
+@keyframes booking-water-flow{0%{background-position:-130px 0,-125% 0;transform:translateX(-20%)}100%{background-position:0 0,125% 0;transform:translateX(150%)}}
+.main.water-view-transition>:not([hidden]){animation:water-page-ripple .62s cubic-bezier(.2,.72,.25,1) both}
+.main.water-view-transition>:nth-child(2){animation-delay:.035s}
+.main.water-view-transition>:nth-child(3){animation-delay:.07s}
+.main.water-view-transition>:nth-child(4){animation-delay:.105s}
+@keyframes water-page-ripple{0%{clip-path:circle(0% at 50% 48%);opacity:.35;filter:blur(2px)}72%{clip-path:circle(145% at 50% 48%);opacity:.94;filter:blur(.25px)}100%{clip-path:circle(165% at 50% 48%);opacity:1;filter:blur(0)}}
+@media(prefers-reduced-motion:reduce){.main.water-view-transition>:not([hidden]){animation:none!important}.booking-login-link::before{animation:none!important;transform:translateX(35%)}}
