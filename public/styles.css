@@ -242,13 +242,20 @@ button:active,button:hover,button[class]:active,button[class]:hover,a.next:activ
 @keyframes booking-snowstorm{to{background-position:72px 44px,-54px 38px,118px 58px,96px 64px}}
 @media(prefers-reduced-motion:reduce){.booking-login-link::before{animation:booking-snowstorm 1.8s linear infinite!important}}
 
-/* Seamless transition from sign-in to the working queue */
-@view-transition{navigation:auto}
-::view-transition-group(root){animation-duration:.68s;animation-timing-function:cubic-bezier(.2,.75,.25,1)}
-::view-transition-old(root){animation:demo-page-out .32s cubic-bezier(.4,0,1,1) both}
-::view-transition-new(root){animation:demo-page-in .68s cubic-bezier(.16,1,.3,1) both}
-@keyframes demo-page-out{to{opacity:0;filter:blur(8px);transform:scale(.985)}}
-@keyframes demo-page-in{from{opacity:.35;filter:blur(10px);transform:scale(1.025)}to{opacity:1;filter:blur(0);transform:scale(1)}}
-.demo-entry-fallback .main{animation:demo-main-in .72s cubic-bezier(.16,1,.3,1) both}
-@keyframes demo-main-in{from{opacity:.35;filter:blur(8px);transform:translateY(12px) scale(.99)}to{opacity:1;filter:blur(0);transform:translateY(0) scale(1)}}
-@media(prefers-reduced-motion:reduce){::view-transition-group(root){animation-duration:.01ms!important}.demo-entry-fallback .main{animation-duration:.01ms!important}}
+/* Ten-second demo preparation overlay */
+.demo-loading-dialog{position:fixed;inset:0;width:100vw;height:100dvh;max-width:none;max-height:none;margin:0;padding:0;border:0;background:transparent;color:#f5f8f7;overflow:hidden}
+.demo-loading-dialog[open]{display:block}
+.demo-loading-dialog::backdrop{background:rgba(5,12,16,.84);backdrop-filter:blur(12px) saturate(.55);-webkit-backdrop-filter:blur(12px) saturate(.55);animation:loading-darken .38s ease-out both}
+.demo-loading-bottom{position:absolute;left:0;right:0;bottom:0;padding:28px max(28px,env(safe-area-inset-right)) max(27px,env(safe-area-inset-bottom)) max(28px,env(safe-area-inset-left));background:linear-gradient(180deg,#111e25f2,#081116 90%);border-top:1px solid #ffffff18;animation:loading-panel-in .56s cubic-bezier(.2,.8,.2,1) both}
+.demo-loading-heading{max-width:980px;margin:0 auto;display:flex;align-items:center;gap:15px}
+.demo-loading-mark{width:42px;height:42px;display:grid;place-items:center;flex:none;border:1px solid #ffffff3d;background:linear-gradient(145deg,#ffffff22,#ffffff07);font:700 18px/1 Manrope,system-ui,sans-serif;color:#fff}
+.demo-loading-kicker{font:700 9px/1.4 Manrope,system-ui,sans-serif;letter-spacing:.18em;color:#7dd8bd}
+.demo-loading-heading h2{margin:4px 0 0;font:650 clamp(19px,3vw,26px)/1.2 Manrope,system-ui,sans-serif;letter-spacing:-.025em;color:#f8fbfa}
+#demo-loading-status{max-width:980px;margin:23px auto 15px;color:#d0ddda;font:500 13px/1.5 Manrope,system-ui,sans-serif;animation:loading-status-in .28s ease both}
+.demo-loading-track{max-width:980px;height:3px;margin:0 auto;background:#ffffff20;overflow:hidden}
+.demo-loading-track span{display:block;width:100%;height:100%;transform:scaleX(0);transform-origin:left;background:linear-gradient(90deg,#24a77d,#54d6ba 58%,#84b9ff);animation:demo-ten-seconds 10s linear both}
+.demo-loading-meta{max-width:980px;margin:10px auto 0;display:flex;justify-content:space-between;gap:14px;color:#91a29f;font:500 10px/1.4 Manrope,system-ui,sans-serif}
+#demo-loading-percent{color:#c5d4d1;font-variant-numeric:tabular-nums}
+@keyframes loading-darken{from{background:rgba(5,12,16,0);backdrop-filter:blur(0)}to{background:rgba(5,12,16,.84);backdrop-filter:blur(12px)}}@keyframes loading-panel-in{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}@keyframes loading-status-in{from{opacity:.45;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}@keyframes demo-ten-seconds{to{transform:scaleX(1)}}
+@media(max-width:600px){.demo-loading-bottom{padding:22px 19px max(23px,env(safe-area-inset-bottom))}.demo-loading-meta{font-size:9px}.demo-loading-mark{width:36px;height:36px}}
+@media(prefers-reduced-motion:reduce){.demo-loading-dialog::backdrop,.demo-loading-bottom,#demo-loading-status,.demo-loading-track span{animation-duration:.01ms!important}}
