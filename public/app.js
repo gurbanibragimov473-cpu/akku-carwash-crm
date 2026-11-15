@@ -56,7 +56,7 @@ function startDemo(){
  const booking={id:'demo-booking-1',customer_id:'demo-customer-8',car_id:'demo-car-8',plate:'246 ERT 14',vehicle:'Toyota Camry 75',service:'Комплексная мойка',price:0,status:'booked',booking_source:'telegram',booking_request:true,state:'pending',requested_for:new Date(now+60*60000).toISOString(),scheduled_for:new Date(now+60*60000).toISOString(),wash_site:'premium',created_at:iso(5),customers:{name:'Айдос Бекенов',phone:'+7 700 000 00 18'}};
  demoBookingRequests=[booking];demoDeleteRequests=[];document.body.classList.add('demo-mode');
  if(!$('demo-banner')){const banner=document.createElement('div'),message=document.createElement('span'),close=document.createElement('button');banner.id='demo-banner';banner.className='demo-banner';message.textContent='ДЕМО-РЕЖИМ · Только тестовые данные. Изменения временные и останутся только в этом браузере.';close.type='button';close.className='demo-banner-close';close.setAttribute('aria-label','Скрыть уведомление');close.textContent='×';close.addEventListener('click',()=>banner.remove());banner.append(message,close);document.querySelector('.main')?.prepend(banner);}
- $('login-dialog').close();updateRole();setView('queue');toast('Демо-режим запущен. Используются только тестовые данные.');
+ if($('login-dialog').open)$('login-dialog').close();updateRole();setView('queue');toast('Демо-режим запущен. Используются только тестовые данные.');
 }
 function clockText(seconds){return String(Math.floor(seconds/60)).padStart(2,'0')+':'+String(seconds%60).padStart(2,'0');}
 function phaseTimer(o){
@@ -156,7 +156,7 @@ $('cancel-form').onsubmit=async e=>{e.preventDefault();$('cancel-error').textCon
 $('announce-open').onclick=()=>$('announce-dialog').showModal();$('announce-close').onclick=()=>$('announce-dialog').close();
 $('announce-form').onsubmit=async e=>{e.preventDefault();const form=e.currentTarget; $('announce-error').textContent='';try{const d=await api('/api/announcements',{method:'POST',body:JSON.stringify({text:new FormData(e.currentTarget).get('text')})});$('announce-dialog').close();if(form)form.reset();toast('Доставлено: '+d.sent+' из '+d.total+' подписанных клиентов.');}catch(err){$('announce-error').textContent=err.message;}};
 $('login-form').onsubmit=async e=>{e.preventDefault();$('login-error').textContent='';try{const d=await api('/api/login',{method:'POST',body:JSON.stringify({password:$('staff-password').value})});role=d.role||'staff';updateRole();$('login-dialog').close();$('staff-password').value='';await load();}catch(err){$('login-error').textContent=err.message;}};
-$('demo-login').onclick=()=>startDemo();$('logout').onclick=async()=>{try{await api('/api/logout',{method:'POST'});}finally{location.reload();}};
+$('demo-login').onclick=()=>{const intro=$('demo-intro-dialog'),button=$('demo-login');if(intro.open)return;button.disabled=true;intro.showModal();$('login-dialog').close();window.setTimeout(()=>{intro.close();button.disabled=false;startDemo();},3000);};$('logout').onclick=async()=>{try{await api('/api/logout',{method:'POST'});}finally{location.reload();}};
 $('archive-detail-close').onclick=()=>$('archive-detail-dialog').close();
 updateRole();
 api('/api/session').then(s=>{if(demoMode)return;if(s.authenticated){role=s.role||'staff';updateRole();load();}else $('login-dialog').showModal();}).catch(()=>{if(!demoMode)$('login-dialog').showModal();});
