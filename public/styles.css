@@ -110,3 +110,8 @@ body.notification-push .sidebar,body.notification-push .main{transform:translate
 body.notification-push .sidebar,body.notification-push .main{transform:none!important}
 @media(max-width:700px){.sidebar .nav[data-view="bookings"]{width:calc(50% - 4px);height:38px;padding:0 8px;font-size:11px}.sidebar .nav[data-view="bookings"] .telegram-logo{width:18px;height:18px;flex-basis:18px}.sidebar .nav[data-view="bookings"] .telegram-count{right:7px}.toast{top:8px;left:50%;right:auto;bottom:auto}}
 @media(prefers-reduced-motion:reduce){.toast{transition-duration:.01ms}}
+
+/* Keep the AKKU wordmark clear without turning it into a heavy green badge. */
+.sidebar .brand{width:100%;max-width:100%;padding:0 0 13px;background:transparent;color:#183c30;border-bottom:1px solid #e7eeea;border-radius:0;font-size:21px;font-weight:800;letter-spacing:-.55px;line-height:1}
+.sidebar .brand small{margin-top:6px;color:#85938c;font-size:8px;font-weight:700;letter-spacing:1.05px;line-height:1.35}
+@media(max-width:700px){.sidebar .brand{height:auto;min-height:43px;padding:0 0 11px;font-size:20px}.sidebar .brand small{font-size:8px;letter-spacing:1px}}
