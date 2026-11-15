@@ -237,7 +237,11 @@ function makeLanguageControl(className) {
   select.setAttribute("data-language", "");
   select.innerHTML = '<option value="en">English</option><option value="ru">Русский</option><option value="kk">Қазақша</option>';
   select.value = language;
-  select.addEventListener("change", () => setLanguage(select.value));
+  select.addEventListener("change", () => {
+    setLanguage(select.value);
+    // Restore the normal page backdrop as soon as a login language is chosen.
+    if (select.classList.contains("language-login")) requestAnimationFrame(() => select.blur());
+  });
   return select;
 }
 function mountLanguageControls() {
