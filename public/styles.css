@@ -170,12 +170,13 @@ button:focus-visible,.button:focus-visible{outline:2px solid #347b5f;outline-off
 .login-dialog .demo-entry:hover{background:#b72a26;box-shadow:0 3px 12px #a5222740}
 .login-dialog .demo-entry:focus-visible{outline:3px solid #e9a19d;outline-offset:3px}
 @keyframes demo-attention{from{background-color:#c8322d;box-shadow:0 2px 8px #a5222724}to{background-color:#ad2723;box-shadow:0 3px 13px #a5222745}}
-.booking-login-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin-top:0;padding:0 14px;border:1px solid #1975b1;border-left:4px solid #155b8b;background:#258bd2;color:#fff!important;text-align:center;font-size:12px;font-weight:800;letter-spacing:.015em;text-decoration:none}
+.booking-login-link{display:flex;align-items:center;justify-content:center;width:100%;min-height:44px;margin-top:0;padding:0 14px;border:1px solid #1975b1;border-left:4px solid #155b8b;background-color:#258bd2;background-image:repeating-linear-gradient(90deg,transparent 0 23px,#ffffff26 23px 31px,transparent 31px 52px),linear-gradient(110deg,#258bd2,#1479bb,#258bd2);background-size:104px 100%,100% 100%;animation:booking-loading-columns .9s linear infinite;color:#fff!important;text-align:center;font-size:12px;font-weight:800;letter-spacing:.015em;text-decoration:none}
+@keyframes booking-loading-columns{to{background-position:104px 0,0 0}}
 .booking-login-link:hover{background:#1978bc;border-color:#155b8b;color:#fff!important}
 .booking-login-link:focus-visible{outline:3px solid #92c9ee;outline-offset:3px}
 .order.phase-progress,.order.phase-progress-drying{background:#fff!important;border-left:3px solid #4b91c9}
 .order.phase-progress::before,.order.phase-progress-drying::before{content:none!important;display:none!important}
-@media(prefers-reduced-motion:reduce){.login-dialog .demo-entry{animation:none!important}}
+@media(prefers-reduced-motion:reduce){.login-dialog .demo-entry,.booking-login-link{animation:none!important}}
 .icon-button{width:auto;min-width:82px;padding:0 12px;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
 .close{width:auto;min-width:72px;height:34px;padding:0 10px;border:1px solid #e1e7e3;border-radius:0;background:#fff;color:#65736b;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
 .close:hover{background:#f2f5f3}
