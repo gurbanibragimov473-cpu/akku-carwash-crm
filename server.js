@@ -88,8 +88,28 @@ app.patch('/api/orders/:id',guard,async(req,res)=>{
  if(data.customers?.telegram_chat_id)await replaceStatusMessage(data,'🚘 '+data.plate+' — '+stages[data.status]+'.');else if(data.customers?.link_code&&process.env.TELEGRAM_BOT_USERNAME)data.telegramLink='https://t.me/'+process.env.TELEGRAM_BOT_USERNAME.replace(/^@/,'')+'?start='+data.customers.link_code;res.json(data);
  }catch(e){res.status(500).json({error:e.message||'Не удалось сохранить заказ.'});}
 });
-async function telegram(method,payload){if(!process.env.TELEGRAM_BOT_TOKEN)return null;try{const r=await fetch('https://api.telegram.org/bot'+process.env.TELEGRAM_BOT_TOKEN+'/'+method,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}),j=await r.json().catch(()=>({}));if(!r.ok||!j.ok){console.error('Telegram API error:',j.description||r.statusText);return null;}return j.result;}catch(e){console.error('Telegram request failed:',e.message);return null;}}
-async function replaceStatusMessage(order,text){if(!order?.customers?.telegram_chat_id)return;const chatId=order.customers.telegram_chat_id,sent=await telegram('sendMessage',{chat_id:chatId,text});if(!sent?.message_id)return;if(order.telegram_message_id){const deleted=await telegram('deleteMessage',{chat_id:chatId,message_id:order.telegram_message_id});if(!deleted){const edited=await telegram('editMessageText',{chat_id:chatId,message_id:order.telegram_message_id,text});if(edited){await telegram('deleteMessage',{chat_id:chatId,message_id:sent.message_id});return;}}}await db.from('wash_orders').update({telegram_message_id:sent.message_id}).eq('id',order.id);}
+async function telegram(method,payload){if(!process.env.TELEGRAM_BOT_TOKEN)return null;try{const r=await fetch('https://api.telegram.org/bot'+process.env.TELEGRAM_BOT_TOKEN+'/'+method,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload),signal:AbortSignal.timeout(8000)}),j=await r.json().catch(()=>({}));if(!r.ok||!j.ok){if(method==='editMessageText'&&j.description==='Bad Request: message is not modified')return{message_id:payload.message_id,notModified:true};console.error('Telegram API error:',j.description||r.statusText);return null;}return j.result;}catch(e){console.error('Telegram request failed:',e.message);return null;}}
+const statusMessageUpdates=new Map();
+async function replaceStatusMessage(order,text){
+ if(!order?.customers?.telegram_chat_id)return;
+ const key=order.id,previous=statusMessageUpdates.get(key)||Promise.resolve();
+ const update=previous.catch(()=>{}).then(async()=>{
+  const chatId=order.customers.telegram_chat_id;
+  let messageId=order.telegram_message_id;
+  const {data:current}=await db.from('wash_orders').select('telegram_message_id').eq('id',order.id).maybeSingle();
+  if(current?.telegram_message_id)messageId=current.telegram_message_id;
+  if(messageId){
+   const edited=await telegram('editMessageText',{chat_id:chatId,message_id:messageId,text});
+   if(edited)return;
+  }
+  const sent=await telegram('sendMessage',{chat_id:chatId,text});
+  if(!sent?.message_id)return;
+  if(messageId)await telegram('deleteMessage',{chat_id:chatId,message_id:messageId});
+  await db.from('wash_orders').update({telegram_message_id:sent.message_id}).eq('id',order.id);
+ });
+ statusMessageUpdates.set(key,update);
+ try{await update;}finally{if(statusMessageUpdates.get(key)===update)statusMessageUpdates.delete(key);}
+}
 app.patch('/api/orders/:id/status',guard,async(req,res)=>{
  const {status}=req.body||{};if(!Object.hasOwn(stages,status)||status==='closed'||status==='booked')return res.status(400).json({error:'Недопустимый этап.'});
  const {data:current,error:ce}=await db.from('wash_orders').select('status,arrived_at,wash_started_at,drying_started_at,stage_history').eq('id',req.params.id).single();if(ce)return res.status(404).json({error:'Заказ не найден.'});
