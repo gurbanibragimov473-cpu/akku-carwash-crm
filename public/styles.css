@@ -220,3 +220,5 @@ button:active,button:hover,button[class]:active,button[class]:hover,a.next:activ
 .main.water-view-transition>:nth-child(4){animation-delay:.105s}
 @keyframes water-page-ripple{0%{clip-path:circle(0% at 50% 48%);opacity:.35;filter:blur(2px)}72%{clip-path:circle(145% at 50% 48%);opacity:.94;filter:blur(.25px)}100%{clip-path:circle(165% at 50% 48%);opacity:1;filter:blur(0)}}
 @media(prefers-reduced-motion:reduce){.main.water-view-transition>:not([hidden]){animation:none!important}.booking-login-link::before{animation:none!important;transform:translateX(35%)}}
+.sidebar .nav,.sidebar .nav.active,.sidebar .nav[data-view='bookings'],.sidebar .nav[data-view='bookings'].active{border-radius:0!important;box-shadow:none!important}
+.booking-login-link::before{opacity:.72;background:repeating-radial-gradient(ellipse at 45% 135%,transparent 0 9px,#ffffff24 10px 12px,transparent 13px 24px),linear-gradient(100deg,transparent 0%,#ffffff18 22%,#ffffff70 48%,#ffffff24 62%,transparent 82%)}
