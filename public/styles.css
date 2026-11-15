@@ -229,3 +229,7 @@ button:active,button:hover,button[class]:active,button[class]:hover,a.next:activ
 .login-dialog::backdrop{transition:background-color .28s ease,backdrop-filter .28s ease,-webkit-backdrop-filter .28s ease}
 .login-dialog:has(.language-login:focus)::backdrop{background:rgba(7,16,22,.82);backdrop-filter:blur(13px) saturate(.72);-webkit-backdrop-filter:blur(13px) saturate(.72)}
 @media(prefers-reduced-motion:reduce){.booking-login-link::before{animation:none!important;opacity:.32;transform:translateX(65%)}}
+.login-dialog::backdrop{background:rgba(20,35,29,.48);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);transition:background-color .42s ease,backdrop-filter .42s ease,-webkit-backdrop-filter .42s ease}
+.login-dialog:has(.language-login:focus)::backdrop{background:rgba(5,12,18,.88);backdrop-filter:blur(17px) saturate(.62);-webkit-backdrop-filter:blur(17px) saturate(.62)}
+.booking-login-link::before{left:-60%;width:52%;opacity:.42;background:linear-gradient(108deg,transparent 10%,#ffffff16 35%,#ffffff78 49%,#e9f8ff40 56%,transparent 82%);animation:booking-water-reflection 3.1s cubic-bezier(.38,.02,.22,1) infinite}
+@keyframes booking-water-reflection{0%{opacity:0;transform:skewX(-14deg) translateX(-20%)}24%{opacity:.42}68%{opacity:.28}100%{opacity:0;transform:skewX(-14deg) translateX(300%)}}
