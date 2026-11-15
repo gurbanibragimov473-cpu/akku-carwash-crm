@@ -115,3 +115,28 @@ body.notification-push .sidebar,body.notification-push .main{transform:none!impo
 .sidebar .brand{width:100%;max-width:100%;padding:0 0 13px;background:transparent;color:#183c30;border-bottom:1px solid #e7eeea;border-radius:0;font-size:21px;font-weight:800;letter-spacing:-.55px;line-height:1}
 .sidebar .brand small{margin-top:6px;color:#85938c;font-size:8px;font-weight:700;letter-spacing:1.05px;line-height:1.35}
 @media(max-width:700px){.sidebar .brand{height:auto;min-height:43px;padding:0 0 11px;font-size:20px}.sidebar .brand small{font-size:8px;letter-spacing:1px}}
+
+/* Clear, editorial menu hierarchy and quieter status artwork. */
+.sidebar .side-label,.sidebar .nav,.sidebar .nav-coming{ text-transform:uppercase;letter-spacing:.075em }
+.sidebar .side-label{letter-spacing:.14em;font-size:9px}
+.sidebar .nav{background:transparent;color:#4c5d55;border-left:2px solid transparent;padding-left:10px;font-size:11px;font-weight:700;transition:background-color .18s ease,color .18s ease}
+.sidebar .nav:hover{background:#f3f6f4;color:#183c30}
+.sidebar .nav.active{background:#e8f2ec;color:#145e49;border-left-color:#176b53}
+.sidebar .nav[data-view='bookings']{background:transparent;color:#4c5d55;border-left:2px solid transparent;padding-left:10px}
+.sidebar .nav[data-view='bookings'].active{background:#e8f2ec;color:#145e49;border-left-color:#176b53}
+.sidebar .nav-coming{font-size:11px;font-weight:700;letter-spacing:.075em}
+.header-actions button,.header-actions select{ text-transform:uppercase;letter-spacing:.055em }
+.demo-banner{position:relative;display:flex;align-items:center;min-height:52px;margin:0 0 22px;padding:13px 58px 13px 16px;border:1px solid #a92c29;border-left:4px solid #7d201e;border-radius:0;background:#bd302c;color:#fff;font-size:11px;font-weight:800;letter-spacing:.055em;line-height:1.55;text-transform:uppercase;box-shadow:0 6px 18px #8f201b18}
+.demo-banner>span{display:block}
+.demo-banner-close{position:absolute;top:50%;right:9px;display:grid;place-items:center;width:32px;height:32px;min-width:32px;padding:0;transform:translateY(-50%);border:1px solid #ffffff90;border-radius:0;background:#a52a27;color:#fff;font:700 20px/1 Arial,sans-serif;cursor:pointer}
+.demo-banner-close:hover{background:#8d2421}
+.stat{isolation:isolate;overflow:hidden}
+.stat>span,.stat>strong,.stat>small{position:relative;z-index:1}
+.stat>i{position:absolute;z-index:0;top:auto;right:16px;bottom:4px;display:grid;width:auto;height:auto;padding:0;border:0;border-radius:0;background:transparent!important;color:#176b53!important;font-size:clamp(48px,5.5vw,76px);font-weight:800;line-height:.85;opacity:.075;pointer-events:none;transform:rotate(-8deg)}
+.stat>i.green{color:#13825b!important}.stat>i.gold{color:#c08b24!important}
+.stage:before{content:none!important;display:none!important}
+.icon-button{width:auto;min-width:82px;padding:0 12px;font-size:10px;text-transform:uppercase;letter-spacing:.05em}
+.close{width:auto;min-width:72px;height:34px;padding:0 10px;border:1px solid #e1e7e3;border-radius:0;background:#fff;color:#65736b;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.close:hover{background:#f2f5f3}
+.archive-delete{width:auto;min-width:88px;padding:0 9px;border-radius:0;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.035em}
+@media(max-width:700px){.demo-banner{min-height:48px;margin-bottom:16px;padding:11px 48px 11px 12px;font-size:9px;letter-spacing:.035em}.demo-banner-close{right:7px;width:30px;height:30px;min-width:30px}.stat>i{right:3px;bottom:4px;font-size:40px;opacity:.055}.header-actions button,.header-actions select{font-size:9px;letter-spacing:.035em}.icon-button{min-width:78px}.close{min-width:66px;height:36px}}

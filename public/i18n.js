@@ -80,6 +80,11 @@ const translations = {
   "Этот продукт создан и обновляется командой Uverian.com. На сайте собраны инструменты для автоматизации бизнеса.":"This product is built and maintained by the Uverian.com team. The site offers tools to automate your business.",
   "Хотите такую же систему? Перейдите на Uverian.com и оставьте заявку.":"Want a system like this? Visit Uverian.com and send an inquiry.",
   "Прервать мойку":"Stop wash","Прервать мойку и переместить заказ в архив отменённых?":"Stop the wash and move this order to the cancelled archive?","Мойка остановлена. Заказ перемещён в архив и отмечен красным.":"Wash stopped. The order was moved to the archive and marked in red.","Отменён / прерван":"Cancelled / interrupted","Кто оформил":"Created by","Не указан":"Not specified","Мойка началась":"Wash started","Сушка началась":"Drying started","Автомобиль готов":"Vehicle ready","На парковке":"In parking","Выдан / архив":"Issued / archived","Причина отмены / остановки":"Cancellation / stop reason","WhatsApp Записи":"WhatsApp Bookings","Недоступно":"Unavailable","Настройки":"Settings","Язык интерфейса":"Interface language","Выберите язык всех экранов":"Choose the language for all screens","Автообновление очереди":"Queue auto-refresh","Частота обновления":"Refresh interval","Каждые 15 секунд":"Every 15 seconds","Каждые 30 секунд":"Every 30 seconds","Каждую минуту":"Every minute","Выключено":"Off","Настройки сохраняются в этом браузере.":"Settings are saved in this browser.","Язык и обновление очереди.":"Language and queue updates.","Настройки интерфейса":"Interface settings","Настройки сохранены.":"Settings saved.","Ваш тариф":"Your plan","Выберите тариф":"Choose a plan","Бесплатный":"Free","Язык, обновление очереди и тариф.":"Language, queue refresh, and plan.",
+  "Скрыть уведомление":"Hide notification",
+  "Закрыть":"Close",
+  "Обновить":"Refresh",
+  "Новый автомобиль":"New vehicle",
+  "Записать вручную":"Add booking",
 };
 const attrTranslations = {
   "Пароль сотрудника или главного администратора":"Staff or administrator password",
@@ -167,7 +172,11 @@ const kazakhTranslations = {
   "Настройки":"Баптаулар", "Ваш тариф":"Сіздің тарифіңіз", "Выберите тариф":"Тарифті таңдаңыз", "Бесплатный":"Тегін", "Язык, обновление очереди и тариф.":"Тіл, кезекті жаңарту және тариф.", "Язык интерфейса":"Интерфейс тілі", "Выберите язык всех экранов":"Барлық экрандардың тілін таңдаңыз", "Автообновление очереди":"Кезекті автоматты жаңарту",
   "Частота обновления":"Жаңарту жиілігі", "Каждые 15 секунд":"Әр 15 секунд сайын", "Каждые 30 секунд":"Әр 30 секунд сайын",
   "Каждую минуту":"Әр минут сайын", "Выключено":"Өшірулі", "Настройки сохраняются в этом браузере.":"Баптаулар осы браузерде сақталады.",
-  "Язык и обновление очереди.":"Тіл мен кезекті жаңарту.", "Настройки интерфейса":"Интерфейс баптаулары", "Настройки сохранены.":"Баптаулар сақталды."
+  "Язык и обновление очереди.":"Тіл мен кезекті жаңарту.", "Настройки интерфейса":"Интерфейс баптаулары", "Настройки сохранены.":"Баптаулар сақталды.",
+  "Скрыть уведомление":"Хабарландыруды жасыру",
+  "Закрыть":"Жабу",
+  "Обновить":"Жаңарту",
+  "Записать вручную":"Қолмен жазу",
 };
 let language = localStorage.getItem("akku-language") || "en";
 if (!(["en", "ru", "kk"].includes(language))) language = "en";
