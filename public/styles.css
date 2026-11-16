@@ -274,9 +274,9 @@ button:active,button:hover,button[class]:active,button[class]:hover,a.next:activ
 .demo-loading-dialog[open]{display:grid}
 .demo-loading-center{width:min(460px,calc(100vw - 36px));padding:34px 30px 30px;background:#fff;color:#18221e;text-align:center}
 #demo-loading-status{margin:0 0 24px;color:#18221e;font:600 16px/1.45 Manrope,system-ui,sans-serif;text-align:center;animation:none}
-.demo-loading-track{position:relative;width:100%;height:20px;margin:0 auto;background:#e5ece8;overflow:hidden}
+.demo-loading-track{position:relative;width:100%;height:28px;margin:0 auto;background:#c7d0cb;overflow:hidden}
 .demo-loading-track span{position:absolute;inset:0 auto 0 0;width:100%;height:100%;transform:scaleX(0);transform-origin:left;background:#167456;box-shadow:none;animation:demo-ten-seconds 10s linear both}
-#demo-loading-percent{position:absolute;inset:0;display:grid;place-items:center;padding:3px 6px;background:#fff;color:#14241d;font:800 13px/1 Manrope,system-ui,sans-serif;font-variant-numeric:tabular-nums}
+#demo-loading-percent{position:absolute;top:50%;left:50%;inset:auto;z-index:2;display:grid;place-items:center;transform:translate(-50%,-50%);padding:4px 7px;background:#fff;color:#14241d;font:800 13px/1 Manrope,system-ui,sans-serif;font-variant-numeric:tabular-nums;white-space:nowrap}
 @media(max-width:500px){.demo-loading-center{padding:28px 22px 24px}#demo-loading-status{font-size:14px}}@property --demo-loading-percent-value{syntax:"<integer>";inherits:false;initial-value:0}
 .demo-loading-track{--demo-loading-percent-value:0;animation:demo-loading-percent-count 10s linear both}
 #demo-loading-percent::after{counter-reset:demo-percent var(--demo-loading-percent-value);content:counter(demo-percent) "%";}
