@@ -292,8 +292,3 @@ button:active,button:hover,button[class]:active,button[class]:hover,a.next:activ
 #demo-banner::after{content:"";position:absolute;left:0;bottom:0;width:100%;height:3px;background:#fff;transform:scaleX(0);transform-origin:left;animation:demo-banner-progress 10s linear forwards;pointer-events:none}
 .demo-banner-close{z-index:1}
 @keyframes demo-banner-progress{to{transform:scaleX(1)}}#demo-loading-percent::after{content:none!important}#demo-loading-percent{display:block;position:static;inset:auto;transform:none;margin:12px auto 0;padding:0;background:transparent;color:#14241d;font:800 18px/1.2 Manrope,system-ui,sans-serif;font-variant-numeric:tabular-nums;text-align:center;white-space:nowrap}
-/* Header actions match the existing quiet, outlined buttons. */
-.header-actions #add-open{min-height:40px;padding:0 12px;border:1px solid #d7e0da!important;border-left:1px solid #d7e0da!important;background:#fff!important;box-shadow:none!important;color:#405148!important;font:700 11px Manrope,Arial,sans-serif;letter-spacing:.02em}
-.header-actions #add-open:hover{background:#f0f6f2!important;border-color:#9dbca8!important;color:#145c45!important}
-.header-actions #logout{background:#fff!important;border-color:#d7e0da!important;color:#405148!important}
-.header-actions #logout:hover{background:#f0f6f2!important;border-color:#9dbca8!important;color:#145c45!important}
