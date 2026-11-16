@@ -281,3 +281,15 @@ button:active,button:hover,button[class]:active,button[class]:hover,a.next:activ
 .demo-loading-track{--demo-loading-percent-value:0;animation:demo-loading-percent-count 10s linear both}
 #demo-loading-percent::after{counter-reset:demo-percent var(--demo-loading-percent-value);content:counter(demo-percent) "%";}
 @keyframes demo-loading-percent-count{to{--demo-loading-percent-value:100}}
+/* Simple color treatment for queue dashboard */
+#stats .stat{border:1px solid #dde7e2;border-left:3px solid #176b53;background:#f0f6f2}
+#stats .stat:nth-child(2){border-left-color:#367fb3;background:#f0f5f9}
+#stats .stat:nth-child(3){border-left-color:#c58a32;background:#faf6ed}
+#stats .stat i{display:none}
+#logout{background:#c8322d!important;border-color:#b62824!important;color:#fff!important}
+#logout:hover{background:#a9211d!important;border-color:#a9211d!important}
+#add-open{background:#1976c9!important;border:1px solid #176bb4!important;color:#fff!important}
+#add-open:hover{background:#125fa4!important;border-color:#125fa4!important}
+#demo-banner{border:1px solid #9f2420!important;background:#bc2b27!important;color:#fff!important;animation:demo-banner-flash .5s ease-in-out 10 alternate}
+@keyframes demo-banner-flash{from{background-color:#bc2b27}to{background-color:#811c19}}
+@media(prefers-reduced-motion:reduce){#demo-banner{animation:none}}
